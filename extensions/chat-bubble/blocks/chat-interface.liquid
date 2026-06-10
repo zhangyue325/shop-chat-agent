@@ -1,12 +1,12 @@
 {{ 'chat.css' | asset_url | stylesheet_tag }}
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-<div class="shop-ai-chat-container">
-  <div class="shop-ai-chat-bubble" style="background-color: {{ block.settings.chat_bubble_color }}">
+<div class="shop-ai-chat-container" data-launcher-placement="{{ block.settings.launcher_placement }}">
+  <button type="button" class="shop-ai-chat-bubble" style="background-color: {{ block.settings.chat_bubble_color }}" aria-label="{{ 'chat.openButton' | t }}">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
     </svg>
-  </div>
+  </button>
 
   <div class="shop-ai-chat-window">
     <div class="shop-ai-chat-header">
@@ -34,7 +34,8 @@
 <script>
   window.shopChatConfig = {
     promptType: {{ block.settings.system_prompt | json }},
-    welcomeMessage: {{ block.settings.welcome_message | json }}
+    welcomeMessage: {{ block.settings.welcome_message | json }},
+    launcherPlacement: {{ block.settings.launcher_placement | json }}
   };
   window.shopId = {{ shop.id }};
 </script>
@@ -49,6 +50,22 @@
       "id": "chat_bubble_color",
       "label": "Chat Bubble Color",
       "default": "#5046e4"
+    },
+    {
+      "type": "select",
+      "id": "launcher_placement",
+      "label": "Launcher placement",
+      "options": [
+        {
+          "value": "bubble",
+          "label": "Floating chat bubble"
+        },
+        {
+          "value": "header",
+          "label": "Top navigation icon"
+        }
+      ],
+      "default": "bubble"
     },
     {
       "type": "text",

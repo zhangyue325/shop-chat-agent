@@ -29,6 +29,7 @@
         this.elements = {
           container: container,
           chatBubble: container.querySelector('.shop-ai-chat-bubble'),
+          headerLauncher: null,
           chatWindow: container.querySelector('.shop-ai-chat-window'),
           closeButton: container.querySelector('.shop-ai-chat-close'),
           chatInput: container.querySelector('.shop-ai-chat-input input'),
@@ -46,6 +47,8 @@
         if (this.isMobile) {
           this.setupMobileViewport();
         }
+
+        this.setupLauncherPlacement();
       },
 
       /**
@@ -97,6 +100,47 @@
             }
           }
         });
+      },
+
+      /**
+       * Switch between floating bubble and header launcher based on theme settings.
+       */
+      setupLauncherPlacement: function() {
+        const placement = window.shopChatConfig?.launcherPlacement ||
+          this.elements.container.dataset.launcherPlacement ||
+          'bubble';
+
+        if (placement !== 'header') return;
+
+        const searchAction = document.querySelector(
+          '.header__icon--search, .header__search, details-modal.header__search, modal-opener.header__search, a[href="/search"], button[aria-label*="Search"], a[aria-label*="Search"]'
+        );
+
+        if (!searchAction || !searchAction.parentElement) return;
+
+        const headerLauncher = this.createHeaderLauncher();
+        searchAction.insertAdjacentElement('afterend', headerLauncher);
+        headerLauncher.addEventListener('click', () => this.toggleChatWindow());
+
+        this.elements.headerLauncher = headerLauncher;
+        this.elements.container.classList.add('shop-ai-chat-container--header');
+      },
+
+      /**
+       * Create a header icon that inherits the theme header color.
+       * @returns {HTMLButtonElement} Header launcher button
+       */
+      createHeaderLauncher: function() {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'shop-ai-header-launcher';
+        button.setAttribute('aria-label', 'Open AI chat');
+        button.innerHTML = [
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">',
+          '<path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>',
+          '</svg>'
+        ].join('');
+        return button;
       },
 
       /**

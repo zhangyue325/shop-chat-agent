@@ -2,6 +2,7 @@
   "chat": {
     "title": "Store Assistant",
     "inputPlaceholder": "Type your message here...",
+    "openButton": "Open AI chat",
     "sendButton": "Send",
     "closeButton": "Close"
   }
