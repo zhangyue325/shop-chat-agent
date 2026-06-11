@@ -94,17 +94,24 @@ export function createToolService() {
    * @returns {Object} Formatted product data
    */
   const formatProductData = (product) => {
-    const price = product.price_range
-      ? `${product.price_range.currency} ${product.price_range.min}`
-      : (product.variants && product.variants.length > 0
-        ? `${product.variants[0].currency} ${product.variants[0].price}`
-        : 'Price not available');
+    const minPrice = product.price_range?.min;
+    const maxPrice = product.price_range?.max;
+
+    const formatPrice = (price) => {
+      return `${price.currency} ${(price.amount / 100).toFixed(2)}`;
+    };
+
+    const price = minPrice && maxPrice
+      ? minPrice.amount === maxPrice.amount
+        ? formatPrice(minPrice)
+        : `${formatPrice(minPrice)} - ${formatPrice(maxPrice)}`
+      : 'Price not available';
 
     return {
       id: product.product_id || `product-${Math.random().toString(36).substring(7)}`,
       title: product.title || 'Product',
       price: price,
-      image_url: product.image_url || '',
+      image_url: product.variants[0].media[0].url || '',
       description: product.description || '',
       url: product.url || ''
     };
