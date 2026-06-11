@@ -67,12 +67,6 @@
         chatInput.addEventListener('keypress', (e) => {
           if (e.key === 'Enter' && chatInput.value.trim() !== '') {
             ShopAIChat.Message.send(chatInput, messagesContainer);
-
-            // On mobile, handle keyboard
-            if (this.isMobile) {
-              chatInput.blur();
-              setTimeout(() => chatInput.focus(), 300);
-            }
           }
         });
 
@@ -80,11 +74,6 @@
         sendButton.addEventListener('click', () => {
           if (chatInput.value.trim() !== '') {
             ShopAIChat.Message.send(chatInput, messagesContainer);
-
-            // On mobile, focus input after sending
-            if (this.isMobile) {
-              setTimeout(() => chatInput.focus(), 300);
-            }
           }
         });
 
@@ -148,9 +137,28 @@
        */
       setupMobileViewport: function() {
         const setViewportHeight = () => {
+          const viewport = window.visualViewport;
+          const viewportHeight = viewport ? viewport.height : window.innerHeight;
+          const bottomOffset = viewport
+            ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
+            : 0;
+          const viewportOffsetTop = viewport ? viewport.offsetTop : 0;
+
           document.documentElement.style.setProperty('--viewport-height', `${window.innerHeight}px`);
+          document.documentElement.style.setProperty('--visual-viewport-height', `${viewportHeight}px`);
+          document.documentElement.style.setProperty('--visual-viewport-offset-top', `${viewportOffsetTop}px`);
+          document.documentElement.style.setProperty('--chat-mobile-bottom-offset', `${bottomOffset}px`);
+          this.scrollToBottom();
         };
+
         window.addEventListener('resize', setViewportHeight);
+        window.addEventListener('orientationchange', setViewportHeight);
+
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener('resize', setViewportHeight);
+          window.visualViewport.addEventListener('scroll', setViewportHeight);
+        }
+
         setViewportHeight();
       },
 
@@ -166,7 +174,7 @@
           // On mobile, prevent body scrolling and delay focus
           if (this.isMobile) {
             document.body.classList.add('shop-ai-chat-open');
-            setTimeout(() => chatInput.focus(), 500);
+            setTimeout(() => chatInput.focus({ preventScroll: true }), 500);
           } else {
             chatInput.focus();
           }
@@ -198,9 +206,12 @@
        */
       scrollToBottom: function() {
         const { messagesContainer } = this.elements;
-        setTimeout(() => {
-          messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }, 100);
+        requestAnimationFrame(() => {
+          messagesContainer.scrollTo({
+            top: messagesContainer.scrollHeight,
+            behavior: 'smooth'
+          });
+        });
       },
 
       /**
