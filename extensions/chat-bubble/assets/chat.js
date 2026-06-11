@@ -525,7 +525,7 @@
             prompt_type: promptType
           });
 
-          const streamUrl = 'https://localhost:3458/chat';
+          const streamUrl = 'https://shop-chat-agent-976732686346.asia-southeast1.run.app/chat';
           const shopId = window.shopId;
 
           const response = await fetch(streamUrl, {
@@ -674,7 +674,7 @@
           messagesContainer.appendChild(loadingMessage);
 
           // Fetch history from the server
-          const historyUrl = `https://localhost:3458/chat?history=true&conversation_id=${encodeURIComponent(conversationId)}`;
+          const historyUrl = `https://shop-chat-agent-976732686346.asia-southeast1.run.app/chat?history=true&conversation_id=${encodeURIComponent(conversationId)}`;
           console.log('Fetching history from:', historyUrl);
 
           const response = await fetch(historyUrl, {
@@ -823,7 +823,7 @@
           attemptCount++;
 
           try {
-            const tokenUrl = 'https://localhost:3458/auth/token-status?conversation_id=' +
+            const tokenUrl = 'https://shop-chat-agent-976732686346.asia-southeast1.run.app/auth/token-status?conversation_id=' +
               encodeURIComponent(conversationId);
             const response = await fetch(tokenUrl);
 
