@@ -31,11 +31,16 @@
     display: none;
   }
 
+  .shop-ai-header-link {
+    display: inline-flex;
+    align-items: center;
+  }
+
   .shop-ai-header-launcher {
-    width: 44px;
+    width: 22px;
     height: 44px;
-    min-width: 44px;
-    padding: 10px;
+    min-width: 22px;
+    padding: 0;
     margin: 0;
     border: 0;
     background: transparent;
@@ -63,6 +68,26 @@
     stroke-width: 1.8;
     stroke-linecap: round;
     stroke-linejoin: round;
+  }
+
+  @media (max-width: 749px) {
+    .shop-ai-search-with-launcher {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .shop-ai-search-with-launcher .shop-ai-header-launcher {
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      padding: 6px;
+    }
+
+    .shop-ai-search-with-launcher .shop-ai-header-launcher svg {
+      width: 20px;
+      height: 20px;
+    }
   }
   
   @media (max-width: 640px) {

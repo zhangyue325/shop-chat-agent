@@ -108,7 +108,21 @@
         if (!searchAction || !searchAction.parentElement) return;
 
         const headerLauncher = this.createHeaderLauncher();
-        searchAction.insertAdjacentElement('afterend', headerLauncher);
+        const searchListItem = searchAction.closest('li');
+        const isCompactHeader = window.matchMedia('(max-width: 749px)').matches;
+
+        if (isCompactHeader && searchListItem) {
+          searchListItem.classList.add('shop-ai-search-with-launcher');
+          searchAction.insertAdjacentElement('beforebegin', headerLauncher);
+        } else if (searchListItem) {
+          const headerLauncherItem = document.createElement('li');
+          headerLauncherItem.className = 'shop-ai-header-link';
+          headerLauncherItem.appendChild(headerLauncher);
+          searchListItem.insertAdjacentElement('beforebegin', headerLauncherItem);
+        } else {
+          searchAction.insertAdjacentElement('beforebegin', headerLauncher);
+        }
+
         headerLauncher.addEventListener('click', () => this.toggleChatWindow());
 
         this.elements.headerLauncher = headerLauncher;
@@ -126,7 +140,9 @@
         button.setAttribute('aria-label', 'Open AI chat');
         button.innerHTML = [
           '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">',
-          '<path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>',
+          '<path d="M9.9 4.24 11.2 7.8l3.56 1.3-3.56 1.3-1.3 3.56-1.3-3.56-3.56-1.3 3.56-1.3 1.3-3.56z"></path>',
+          '<path d="M17.5 12.5 18.28 14.72 20.5 15.5l-2.22.78-.78 2.22-.78-2.22-2.22-.78 2.22-.78.78-2.22z"></path>',
+          '<path d="M5.5 14.5 6.05 16 7.5 16.5 6.05 17 5.5 18.5 4.95 17 3.5 16.5 4.95 16 5.5 14.5z"></path>',
           '</svg>'
         ].join('');
         return button;
