@@ -79,6 +79,7 @@ export function createClaudeService(apiKey = process.env.CLAUDE_API_KEY) {
    */
   const getSystemPrompt = (promptType) => {
     return systemPrompts.systemPrompts[promptType]?.content ||
+      promptType ||
       systemPrompts.systemPrompts[AppConfig.api.defaultPromptType].content;
   };
 

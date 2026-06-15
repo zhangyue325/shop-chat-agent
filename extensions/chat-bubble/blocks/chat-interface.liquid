@@ -35,7 +35,9 @@
   window.shopChatConfig = {
     promptType: {{ block.settings.system_prompt | json }},
     welcomeMessage: {{ block.settings.welcome_message | json }},
-    launcherPlacement: {{ block.settings.launcher_placement | json }}
+    launcherPlacement: {{ block.settings.launcher_placement | json }},
+    shopDomain: {{ shop.permanent_domain | json }},
+    apiBaseUrl: "https://shop-chat-agent-976732686346.asia-southeast1.run.app"
   };
   window.shopId = {{ shop.id }};
 </script>
@@ -71,7 +73,7 @@
       "type": "text",
       "id": "welcome_message",
       "label": "Welcome Message",
-      "default": "👋 Hi there! How can I help you today?"
+      "default": "Ask me anything you are interested in."
     },
     {
       "type": "select",

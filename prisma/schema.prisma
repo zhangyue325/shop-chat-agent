@@ -80,3 +80,13 @@ model CustomerAccountUrls {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 }
+
+model ChatSettings {
+  id                  String    @id @default(cuid())
+  shop                String    @unique
+  systemPrompt        String    @default("standardAssistant")
+  welcomeMessage      String
+  welcomeProductsJson String
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}

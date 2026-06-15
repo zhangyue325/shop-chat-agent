@@ -259,7 +259,7 @@
        * Display product results in the chat
        * @param {Array} products - Array of product data objects
        */
-      displayProductResults: function(products) {
+      displayProductResults: function(products, title = 'Top Matching Products') {
         const { messagesContainer } = this.elements;
 
         // Create a wrapper for the product section
@@ -270,7 +270,9 @@
         // Add a header for the product results
         const header = document.createElement('div');
         header.classList.add('shop-ai-product-header');
-        header.innerHTML = '<h4>Top Matching Products</h4>';
+        const headerTitle = document.createElement('h4');
+        headerTitle.textContent = title;
+        header.appendChild(headerTitle);
         productSection.appendChild(header);
 
         // Create the product grid container
@@ -536,6 +538,48 @@
      */
     API: {
       /**
+       * Load merchant-configured welcome settings from the app admin.
+       */
+      loadChatSettings: async function() {
+        const config = window.shopChatConfig || {};
+        const shopDomain = config.shopDomain;
+        const apiBaseUrl = config.apiBaseUrl || 'https://shop-chat-agent-976732686346.asia-southeast1.run.app';
+
+        if (!shopDomain) return;
+
+        try {
+          const settingsUrl = `${apiBaseUrl}/chat-settings?shop=${encodeURIComponent(shopDomain)}`;
+          const response = await fetch(settingsUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json'
+            },
+            mode: 'cors'
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to load chat settings: ' + response.status);
+          }
+
+          const settings = await response.json();
+          window.shopChatConfig = {
+            ...config,
+            promptType: settings.systemPrompt || config.promptType,
+            welcomeMessage: settings.welcomeMessage || config.welcomeMessage,
+            welcomeProducts: Array.isArray(settings.welcomeProducts)
+              ? settings.welcomeProducts
+              : config.welcomeProducts
+          };
+
+          if (Array.isArray(settings.welcomeProducts)) {
+            ShopAIChat.Product.welcomeProducts = settings.welcomeProducts;
+          }
+        } catch (error) {
+          console.error('Error loading chat settings:', error);
+        }
+      },
+
+      /**
        * Stream a response from the API
        * @param {string} userMessage - User's message text
        * @param {string} conversationId - Conversation ID for context
@@ -552,7 +596,7 @@
             prompt_type: promptType
           });
 
-          const streamUrl = 'https://shop-chat-agent-976732686346.asia-southeast1.run.app/chat';
+          const streamUrl = 'https://localhost:3458/chat';
           const shopId = window.shopId;
 
           const response = await fetch(streamUrl, {
@@ -701,7 +745,7 @@
           messagesContainer.appendChild(loadingMessage);
 
           // Fetch history from the server
-          const historyUrl = `https://shop-chat-agent-976732686346.asia-southeast1.run.app/chat?history=true&conversation_id=${encodeURIComponent(conversationId)}`;
+          const historyUrl = `https://localhost:3458/chat?history=true&conversation_id=${encodeURIComponent(conversationId)}`;
           console.log('Fetching history from:', historyUrl);
 
           const response = await fetch(historyUrl, {
@@ -725,8 +769,9 @@
 
           // No messages, show welcome message
           if (!data.messages || data.messages.length === 0) {
-            const welcomeMessage = window.shopChatConfig?.welcomeMessage || "👋 Hi there! How can I help you today?";
+            const welcomeMessage = window.shopChatConfig?.welcomeMessage || "Ask me anything you are interested in.";
             ShopAIChat.Message.add(welcomeMessage, 'assistant', messagesContainer);
+            ShopAIChat.Product.showWelcomeProducts();
             return;
           }
 
@@ -757,8 +802,9 @@
           }
 
           // Show error and welcome message
-          const welcomeMessage = window.shopChatConfig?.welcomeMessage || "👋 Hi there! How can I help you today?";
+          const welcomeMessage = window.shopChatConfig?.welcomeMessage || "Ask me anything you are interested in.";
           ShopAIChat.Message.add(welcomeMessage, 'assistant', messagesContainer);
+          ShopAIChat.Product.showWelcomeProducts();
 
           // Clear the conversation ID since we couldn't fetch this conversation
           sessionStorage.removeItem('shopAiConversationId');
@@ -850,7 +896,7 @@
           attemptCount++;
 
           try {
-            const tokenUrl = 'https://shop-chat-agent-976732686346.asia-southeast1.run.app/auth/token-status?conversation_id=' +
+            const tokenUrl = 'https://localhost:3458/auth/token-status?conversation_id=' +
               encodeURIComponent(conversationId);
             const response = await fetch(tokenUrl);
 
@@ -894,6 +940,17 @@
      * Product-related functionality
      */
     Product: {
+      welcomeProducts: [],
+
+      /**
+       * Display configured products below the initial welcome message.
+       */
+      showWelcomeProducts: function() {
+        const products = window.shopChatConfig?.welcomeProducts || this.welcomeProducts;
+        if (!Array.isArray(products) || products.length === 0) return;
+        ShopAIChat.UI.displayProductResults(products, 'Featured Products');
+      },
+
       /**
        * Create a product card element
        * @param {Object} product - Product data
@@ -975,11 +1032,12 @@
     /**
      * Initialize the chat application
      */
-    init: function() {
+    init: async function() {
       // Initialize UI
       const container = document.querySelector('.shop-ai-chat-container');
       if (!container) return;
 
+      await this.API.loadChatSettings();
       this.UI.init(container);
 
       // Check for existing conversation
@@ -990,8 +1048,9 @@
         this.API.fetchChatHistory(conversationId, this.UI.elements.messagesContainer);
       } else {
         // No previous conversation, show welcome message
-        const welcomeMessage = window.shopChatConfig?.welcomeMessage || "👋 Hi there! How can I help you today?";
+        const welcomeMessage = window.shopChatConfig?.welcomeMessage || "Ask me anything you are interested in.";
         this.Message.add(welcomeMessage, 'assistant', this.UI.elements.messagesContainer);
+        this.Product.showWelcomeProducts();
       }
     }
   };
