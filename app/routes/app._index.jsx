@@ -3,6 +3,7 @@ import { authenticate } from "../shopify.server";
 import {
   defaultWelcomeMessage,
   defaultWelcomeProducts,
+  defaultHumanAssistantUrl,
   getChatSettings,
   normalizeWelcomeProducts,
   saveChatSettings,
@@ -23,6 +24,8 @@ export const action = async ({ request }) => {
   const welcomeMessage =
     formData.get("welcomeMessage")?.toString().trim() || defaultWelcomeMessage;
   const systemPrompt = formData.get("systemPrompt")?.toString();
+  const humanAssistantUrl =
+    formData.get("humanAssistantUrl")?.toString().trim() || defaultHumanAssistantUrl;
 
   const welcomeProducts = defaultWelcomeProducts.map((product, index) => ({
     id: product.id,
@@ -35,6 +38,7 @@ export const action = async ({ request }) => {
   await saveChatSettings(session.shop, {
     systemPrompt,
     welcomeMessage,
+    humanAssistantUrl,
     welcomeProducts: normalizeWelcomeProducts(welcomeProducts),
   });
 
@@ -83,6 +87,15 @@ export default function Index() {
                 name="systemPrompt"
                 rows={8}
                 defaultValue={settings.systemPrompt}
+              />
+            </div>
+
+            <div className="field">
+              <label htmlFor="humanAssistantUrl">Human assistant URL</label>
+              <input
+                id="humanAssistantUrl"
+                name="humanAssistantUrl"
+                defaultValue={settings.humanAssistantUrl}
               />
             </div>
 

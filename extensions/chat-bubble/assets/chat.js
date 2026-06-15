@@ -32,6 +32,8 @@
           headerLauncher: null,
           chatWindow: container.querySelector('.shop-ai-chat-window'),
           closeButton: container.querySelector('.shop-ai-chat-close'),
+          menuButton: container.querySelector('.shop-ai-chat-menu-button'),
+          menuList: container.querySelector('.shop-ai-chat-menu-list'),
           chatInput: container.querySelector('.shop-ai-chat-input input'),
           sendButton: container.querySelector('.shop-ai-chat-send'),
           messagesContainer: container.querySelector('.shop-ai-chat-messages')
@@ -55,13 +57,39 @@
        * Set up all event listeners for UI interactions
        */
       setupEventListeners: function() {
-        const { chatBubble, closeButton, chatInput, sendButton, messagesContainer } = this.elements;
+        const {
+          chatBubble,
+          closeButton,
+          menuButton,
+          menuList,
+          chatInput,
+          sendButton,
+          messagesContainer
+        } = this.elements;
 
         // Toggle chat window visibility
         chatBubble.addEventListener('click', () => this.toggleChatWindow());
 
         // Close chat window
         closeButton.addEventListener('click', () => this.closeChatWindow());
+
+        menuButton.addEventListener('click', (event) => {
+          event.stopPropagation();
+          this.toggleMenu();
+        });
+
+        menuList.addEventListener('click', (event) => {
+          const action = event.target?.dataset?.chatAction;
+          if (!action) return;
+
+          this.closeMenu();
+
+          if (action === 'new-session') {
+            this.startNewSession();
+          } else if (action === 'human-assistant') {
+            this.redirectToHumanAssistant();
+          }
+        });
 
         // Send message when pressing Enter in input
         chatInput.addEventListener('keypress', (e) => {
@@ -79,6 +107,12 @@
 
         // Handle window resize to adjust scrolling
         window.addEventListener('resize', () => this.scrollToBottom());
+
+        document.addEventListener('click', (event) => {
+          if (!this.elements.container.contains(event.target)) {
+            this.closeMenu();
+          }
+        });
 
         // Add global click handler for auth links
         document.addEventListener('click', function(event) {
@@ -209,12 +243,60 @@
         const { chatWindow, chatInput } = this.elements;
 
         chatWindow.classList.remove('active');
+        this.closeMenu();
 
         // On mobile, blur input to hide keyboard and enable body scrolling
         if (this.isMobile) {
           chatInput.blur();
           document.body.classList.remove('shop-ai-chat-open');
         }
+      },
+
+      /**
+       * Toggle the chat options menu.
+       */
+      toggleMenu: function() {
+        const { menuButton, menuList } = this.elements;
+        const isOpen = !menuList.hidden;
+
+        menuList.hidden = isOpen;
+        menuButton.setAttribute('aria-expanded', String(!isOpen));
+      },
+
+      /**
+       * Close the chat options menu.
+       */
+      closeMenu: function() {
+        const { menuButton, menuList } = this.elements;
+        if (!menuButton || !menuList) return;
+
+        menuList.hidden = true;
+        menuButton.setAttribute('aria-expanded', 'false');
+      },
+
+      /**
+       * Clear the current conversation and show the configured welcome state.
+       */
+      startNewSession: function() {
+        const { messagesContainer, chatInput } = this.elements;
+        sessionStorage.removeItem('shopAiConversationId');
+        sessionStorage.removeItem('shopAiLastMessage');
+        sessionStorage.removeItem('shopAiTokenPollingId');
+
+        messagesContainer.innerHTML = '';
+        chatInput.value = '';
+
+        const welcomeMessage = window.shopChatConfig?.welcomeMessage || "Ask me anything you are interested in.";
+        ShopAIChat.Message.add(welcomeMessage, 'assistant', messagesContainer);
+        ShopAIChat.Product.showWelcomeProducts();
+      },
+
+      /**
+       * Redirect to the configured human assistant page.
+       */
+      redirectToHumanAssistant: function() {
+        const url = window.shopChatConfig?.humanAssistantUrl || 'https://www.pazzion.com/pages/contact';
+        window.location.href = url;
       },
 
       /**
@@ -309,6 +391,8 @@
         const userMessage = chatInput.value.trim();
         const conversationId = sessionStorage.getItem('shopAiConversationId');
 
+        this.removeSuggestions(messagesContainer);
+
         // Add user message to chat
         this.add(userMessage, 'user', messagesContainer);
 
@@ -332,9 +416,10 @@
        * @param {string} text - Message content
        * @param {string} sender - Message sender ('user' or 'assistant')
        * @param {HTMLElement} messagesContainer - The messages container
+       * @param {boolean} showSuggestions - Whether to show suggested replies
        * @returns {HTMLElement} The created message element
        */
-      add: function(text, sender, messagesContainer) {
+      add: function(text, sender, messagesContainer, showSuggestions = sender === 'assistant') {
         const messageElement = document.createElement('div');
         messageElement.classList.add('shop-ai-message', sender);
 
@@ -346,9 +431,105 @@
         }
 
         messagesContainer.appendChild(messageElement);
+        if (sender === 'assistant' && showSuggestions) {
+          this.addSuggestions(text, messagesContainer);
+        }
         ShopAIChat.UI.scrollToBottom();
 
         return messageElement;
+      },
+
+      /**
+       * Remove existing suggested reply chips.
+       * @param {HTMLElement} messagesContainer - The messages container
+       */
+      removeSuggestions: function(messagesContainer) {
+        messagesContainer.querySelectorAll('.shop-ai-suggestions').forEach(element => element.remove());
+      },
+
+      /**
+       * Add suggested next-question chips below an assistant response.
+       * @param {string} assistantText - Assistant response text
+       * @param {HTMLElement} messagesContainer - The messages container
+       */
+      addSuggestions: function(assistantText, messagesContainer) {
+        this.removeSuggestions(messagesContainer);
+
+        const suggestions = this.generateSuggestions(assistantText);
+        if (suggestions.length === 0) return;
+
+        const suggestionsElement = document.createElement('div');
+        suggestionsElement.classList.add('shop-ai-suggestions');
+
+        suggestions.forEach(suggestion => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.classList.add('shop-ai-suggestion-chip');
+          button.textContent = suggestion;
+          button.addEventListener('click', () => {
+            const input = ShopAIChat.UI.elements.chatInput;
+            if (!input) return;
+
+            input.value = suggestion;
+            this.send(input, messagesContainer);
+          });
+          suggestionsElement.appendChild(button);
+        });
+
+        messagesContainer.appendChild(suggestionsElement);
+      },
+
+      /**
+       * Generate 1-3 likely next questions from an assistant response.
+       * @param {string} assistantText - Assistant response text
+       * @returns {Array<string>} Suggested questions
+       */
+      generateSuggestions: function(assistantText) {
+        const text = (assistantText || '').toLowerCase();
+        const suggestions = [];
+
+        const add = (suggestion) => {
+          if (suggestions.length < 3 && !suggestions.includes(suggestion)) {
+            suggestions.push(suggestion);
+          }
+        };
+
+        if (text.includes('cart') || text.includes('checkout')) {
+          add('Show me my cart');
+          add('How do I check out?');
+        }
+
+        if (text.includes('shipping') || text.includes('delivery')) {
+          add('What are the shipping options?');
+          add('How long does delivery take?');
+        }
+
+        if (text.includes('return') || text.includes('refund') || text.includes('exchange')) {
+          add('What is the return policy?');
+          add('How do I start an exchange?');
+        }
+
+        if (text.includes('size') || text.includes('fit')) {
+          add('What size should I choose?');
+          add('Can you compare the sizes?');
+        }
+
+        if (text.includes('product') || text.includes('recommend') || text.includes('best seller') || text.includes('collection')) {
+          add('Show me best sellers');
+          add('Recommend something similar');
+          add('What is new this season?');
+        }
+
+        if (text.includes('brand') || text.includes('store')) {
+          add('Introduce this brand to me');
+          add('Show me popular products');
+        }
+
+        add('Show me best sellers');
+        add('Recommend something for me');
+        add('What promotions are available?');
+
+        return suggestions;
       },
 
       /**
@@ -566,12 +747,13 @@
             ...config,
             promptType: settings.systemPrompt || config.promptType,
             welcomeMessage: settings.welcomeMessage || config.welcomeMessage,
-            welcomeProducts: Array.isArray(settings.welcomeProducts)
+            humanAssistantUrl: settings.humanAssistantUrl || config.humanAssistantUrl,
+            welcomeProducts: Array.isArray(settings.welcomeProducts) && settings.welcomeProducts.length > 0
               ? settings.welcomeProducts
-              : config.welcomeProducts
+              : config.welcomeProducts || ShopAIChat.Product.welcomeProducts
           };
 
-          if (Array.isArray(settings.welcomeProducts)) {
+          if (Array.isArray(settings.welcomeProducts) && settings.welcomeProducts.length > 0) {
             ShopAIChat.Product.welcomeProducts = settings.welcomeProducts;
           }
         } catch (error) {
@@ -676,6 +858,7 @@
           case 'message_complete':
             ShopAIChat.UI.removeTypingIndicator();
             ShopAIChat.Formatting.formatMessageContent(currentMessageElement);
+            ShopAIChat.Message.addSuggestions(currentMessageElement.dataset.rawText, messagesContainer);
             ShopAIChat.UI.scrollToBottom();
             break;
 
@@ -687,12 +870,16 @@
             console.error('Stream error:', data.error);
             ShopAIChat.UI.removeTypingIndicator();
             currentMessageElement.textContent = "Sorry, I couldn't process your request. Please try again later.";
+            currentMessageElement.dataset.rawText = currentMessageElement.textContent;
+            ShopAIChat.Message.addSuggestions(currentMessageElement.dataset.rawText, messagesContainer);
             break;
 
           case 'rate_limit_exceeded':
             console.error('Rate limit exceeded:', data.error);
             ShopAIChat.UI.removeTypingIndicator();
             currentMessageElement.textContent = "Sorry, our servers are currently busy. Please try again later.";
+            currentMessageElement.dataset.rawText = currentMessageElement.textContent;
+            ShopAIChat.Message.addSuggestions(currentMessageElement.dataset.rawText, messagesContainer);
             break;
 
           case 'auth_required':
@@ -711,6 +898,7 @@
             break;
 
           case 'new_message':
+            ShopAIChat.Message.removeSuggestions(messagesContainer);
             ShopAIChat.Formatting.formatMessageContent(currentMessageElement);
             ShopAIChat.UI.showTypingIndicator();
 
@@ -781,11 +969,11 @@
               const messageContents = JSON.parse(message.content);
               for (const contentBlock of messageContents) {
                 if (contentBlock.type === 'text') {
-                  ShopAIChat.Message.add(contentBlock.text, message.role, messagesContainer);
+                  ShopAIChat.Message.add(contentBlock.text, message.role, messagesContainer, false);
                 }
               }
             } catch (e) {
-              ShopAIChat.Message.add(message.content, message.role, messagesContainer);
+              ShopAIChat.Message.add(message.content, message.role, messagesContainer, false);
             }
           });
 
@@ -940,7 +1128,43 @@
      * Product-related functionality
      */
     Product: {
-      welcomeProducts: [],
+      welcomeProducts: [
+        {
+          id: 'welcome-product-1',
+          title: 'Everyday Cotton Tee',
+          price: '$29.00',
+          image_url: 'https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-product-1_large.png',
+          url: ''
+        },
+        {
+          id: 'welcome-product-2',
+          title: 'Classic Denim Jacket',
+          price: '$89.00',
+          image_url: 'https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-product-2_large.png',
+          url: ''
+        },
+        {
+          id: 'welcome-product-3',
+          title: 'Canvas Weekend Tote',
+          price: '$45.00',
+          image_url: 'https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-product-3_large.png',
+          url: ''
+        },
+        {
+          id: 'welcome-product-4',
+          title: 'Minimal Leather Wallet',
+          price: '$39.00',
+          image_url: 'https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-product-4_large.png',
+          url: ''
+        },
+        {
+          id: 'welcome-product-5',
+          title: 'Ribbed Knit Sweater',
+          price: '$64.00',
+          image_url: 'https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-product-5_large.png',
+          url: ''
+        }
+      ],
 
       /**
        * Display configured products below the initial welcome message.

@@ -11,7 +11,16 @@
   <div class="shop-ai-chat-window">
     <div class="shop-ai-chat-header">
       <div>{{ 'chat.title' | t }}</div>
-      <button class="shop-ai-chat-close">✕</button>
+      <div class="shop-ai-chat-header-actions">
+        <div class="shop-ai-chat-menu">
+          <button type="button" class="shop-ai-chat-menu-button" aria-label="Chat options" aria-expanded="false">...</button>
+          <div class="shop-ai-chat-menu-list" hidden>
+            <button type="button" class="shop-ai-chat-menu-item" data-chat-action="new-session">Start a new session</button>
+            <button type="button" class="shop-ai-chat-menu-item" data-chat-action="human-assistant">Talk to human assistant</button>
+          </div>
+        </div>
+        <button type="button" class="shop-ai-chat-close">✕</button>
+      </div>
     </div>
 
     <div class="shop-ai-chat-messages">

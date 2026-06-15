@@ -86,6 +86,7 @@ model ChatSettings {
   shop                String    @unique
   systemPrompt        String    @default("standardAssistant")
   welcomeMessage      String
+  humanAssistantUrl   String    @default("https://www.pazzion.com/pages/contact")
   welcomeProductsJson String
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt

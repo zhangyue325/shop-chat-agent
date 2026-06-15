@@ -4,6 +4,7 @@ import systemPrompts from "../prompts/prompts.json";
 export const defaultWelcomeMessage = "Ask me anything you are interested in.";
 export const defaultSystemPrompt =
   systemPrompts.systemPrompts.standardAssistant.content;
+export const defaultHumanAssistantUrl = "https://www.pazzion.com/pages/contact";
 
 export const defaultWelcomeProducts = [
   {
@@ -70,6 +71,7 @@ export function formatChatSettings(settings) {
   return {
     systemPrompt: normalizeSystemPrompt(settings?.systemPrompt),
     welcomeMessage: settings?.welcomeMessage || defaultWelcomeMessage,
+    humanAssistantUrl: normalizeHumanAssistantUrl(settings?.humanAssistantUrl),
     welcomeProducts: settings?.welcomeProductsJson
       ? parseWelcomeProducts(settings.welcomeProductsJson)
       : defaultWelcomeProducts,
@@ -84,6 +86,11 @@ export function normalizeSystemPrompt(systemPrompt) {
   }
 
   return systemPrompts.systemPrompts[prompt]?.content || prompt;
+}
+
+export function normalizeHumanAssistantUrl(humanAssistantUrl) {
+  const url = humanAssistantUrl?.trim();
+  return url || defaultHumanAssistantUrl;
 }
 
 export async function getChatSettings(shop) {
@@ -101,7 +108,7 @@ export async function getChatSettings(shop) {
     }
 
     const settings = await prisma.$queryRaw`
-      SELECT "systemPrompt", "welcomeMessage", "welcomeProductsJson"
+      SELECT "systemPrompt", "welcomeMessage", "humanAssistantUrl", "welcomeProductsJson"
       FROM "ChatSettings"
       WHERE "shop" = ${shop}
       LIMIT 1
@@ -116,6 +123,7 @@ export async function getChatSettings(shop) {
 
 export async function saveChatSettings(shop, settings) {
   const systemPrompt = normalizeSystemPrompt(settings.systemPrompt);
+  const humanAssistantUrl = normalizeHumanAssistantUrl(settings.humanAssistantUrl);
   const welcomeProducts = normalizeWelcomeProducts(settings.welcomeProducts);
   const welcomeProductsJson = JSON.stringify(welcomeProducts);
 
@@ -126,11 +134,13 @@ export async function saveChatSettings(shop, settings) {
         shop,
         systemPrompt,
         welcomeMessage: settings.welcomeMessage,
+        humanAssistantUrl,
         welcomeProductsJson,
       },
       update: {
         systemPrompt,
         welcomeMessage: settings.welcomeMessage,
+        humanAssistantUrl,
         welcomeProductsJson,
       },
     });
@@ -142,6 +152,7 @@ export async function saveChatSettings(shop, settings) {
       "shop",
       "systemPrompt",
       "welcomeMessage",
+      "humanAssistantUrl",
       "welcomeProductsJson",
       "createdAt",
       "updatedAt"
@@ -151,6 +162,7 @@ export async function saveChatSettings(shop, settings) {
       ${shop},
       ${systemPrompt},
       ${settings.welcomeMessage},
+      ${humanAssistantUrl},
       ${welcomeProductsJson},
       CURRENT_TIMESTAMP,
       CURRENT_TIMESTAMP
@@ -158,6 +170,7 @@ export async function saveChatSettings(shop, settings) {
     ON CONFLICT("shop") DO UPDATE SET
       "systemPrompt" = excluded."systemPrompt",
       "welcomeMessage" = excluded."welcomeMessage",
+      "humanAssistantUrl" = excluded."humanAssistantUrl",
       "welcomeProductsJson" = excluded."welcomeProductsJson",
       "updatedAt" = CURRENT_TIMESTAMP
   `;
