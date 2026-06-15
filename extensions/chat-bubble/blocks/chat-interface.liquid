@@ -42,7 +42,7 @@
 <script src="{{ 'chat.js' | asset_url }}" defer></script>
 <script>
   window.shopChatConfig = {
-    promptType: {{ block.settings.system_prompt | json }},
+    promptType: "standardAssistant",
     welcomeMessage: {{ block.settings.welcome_message | json }},
     launcherPlacement: {{ block.settings.launcher_placement | json }},
     shopDomain: {{ shop.permanent_domain | json }},
@@ -83,22 +83,6 @@
       "id": "welcome_message",
       "label": "Welcome Message",
       "default": "Ask me anything you are interested in."
-    },
-    {
-      "type": "select",
-      "id": "system_prompt",
-      "label": "System Prompt",
-      "options": [
-        {
-          "value": "standardAssistant",
-          "label": "Standard Assistant"
-        },
-        {
-          "value": "enthusiasticAssistant",
-          "label": "Enthusiastic Assistant"
-        }
-      ],
-      "default": "standardAssistant"
     }
   ]
 }
