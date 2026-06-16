@@ -3,7 +3,7 @@ The [official Shopify template app](https://github.com/Shopify/shop-chat-agent) 
 
 To address these issues, I built this project to make it easier to use Shopify Storefront MCP to build your Shopify AI agent assistant, while providing a more reliable experience and a richer set of new features.
 
-Some of features referred by [Clarity Brand Agent](https://clarity.microsoft.com/brand-agents).
+Some of features referred from [Clarity Brand Agent](https://clarity.microsoft.com/brand-agents).
 
 
 # New Features
@@ -92,5 +92,6 @@ You can find the details (including MCP capabilities, basic test cases) of Shopi
 Coming soon...
 
 # Features To Be Developed
+- ~~suggested reply chips (completed)~~
 - Smarter suggested reply chips
-- Dashboard for the agent (agent sessions, session topic, CR, CVR, and so on)
+- Dashboard for the AI agent (agent sessions, session topic, CR, CVR, and so on)

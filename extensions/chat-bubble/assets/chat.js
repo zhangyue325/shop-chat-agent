@@ -719,15 +719,26 @@
      * API communication and data handling
      */
     API: {
+      getApiBaseUrl: function() {
+        const apiBaseUrl = window.shopChatConfig?.apiBaseUrl?.trim().replace(/\/+$/, '');
+
+        if (!apiBaseUrl) {
+          console.error('Missing shopChatConfig.apiBaseUrl');
+          return '';
+        }
+
+        return apiBaseUrl;
+      },
+
       /**
        * Load merchant-configured welcome settings from the app admin.
        */
       loadChatSettings: async function() {
         const config = window.shopChatConfig || {};
         const shopDomain = config.shopDomain;
-        const apiBaseUrl = config.apiBaseUrl || 'https://shop-chat-agent-976732686346.asia-southeast1.run.app';
+        const apiBaseUrl = this.getApiBaseUrl();
 
-        if (!shopDomain) return;
+        if (!shopDomain || !apiBaseUrl) return;
 
         try {
           const settingsUrl = `${apiBaseUrl}/chat-settings?shop=${encodeURIComponent(shopDomain)}`;
@@ -788,7 +799,12 @@
             prompt_type: promptType
           });
 
-          const streamUrl = 'https://localhost:3458/chat';
+          const apiBaseUrl = this.getApiBaseUrl();
+          if (!apiBaseUrl) {
+            throw new Error('Missing API base URL');
+          }
+
+          const streamUrl = `${apiBaseUrl}/chat`;
           const shopId = window.shopId;
 
           const response = await fetch(streamUrl, {
@@ -943,7 +959,12 @@
           messagesContainer.appendChild(loadingMessage);
 
           // Fetch history from the server
-          const historyUrl = `https://localhost:3458/chat?history=true&conversation_id=${encodeURIComponent(conversationId)}`;
+          const apiBaseUrl = this.getApiBaseUrl();
+          if (!apiBaseUrl) {
+            throw new Error('Missing API base URL');
+          }
+
+          const historyUrl = `${apiBaseUrl}/chat?history=true&conversation_id=${encodeURIComponent(conversationId)}`;
           console.log('Fetching history from:', historyUrl);
 
           const response = await fetch(historyUrl, {
@@ -1100,7 +1121,10 @@
           attemptCount++;
 
           try {
-            const tokenUrl = 'https://localhost:3458/auth/token-status?conversation_id=' +
+            const apiBaseUrl = ShopAIChat.API.getApiBaseUrl();
+            if (!apiBaseUrl) return;
+
+            const tokenUrl = `${apiBaseUrl}/auth/token-status?conversation_id=` +
               encodeURIComponent(conversationId);
             const response = await fetch(tokenUrl);
 

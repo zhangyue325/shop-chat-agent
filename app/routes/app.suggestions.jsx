@@ -1,8 +1,7 @@
+import { useState } from "react";
 import { Form, useActionData, useLoaderData, useNavigation } from "react-router";
 import { authenticate } from "../shopify.server";
 import {
-  defaultSuggestionChips,
-  defaultSuggestionRules,
   getChatSettings,
   normalizeSuggestionChips,
   normalizeSuggestionRules,
@@ -14,8 +13,6 @@ export const loader = async ({ request }) => {
   const settings = await getChatSettings(session.shop);
 
   return {
-    defaultSuggestionChips,
-    defaultSuggestionRules,
     settings,
   };
 };
@@ -25,17 +22,18 @@ export const action = async ({ request }) => {
   const settings = await getChatSettings(session.shop);
   const formData = await request.formData();
   const suggestionsEnabled = formData.get("suggestionsEnabled") === "on";
-  const suggestionChips = defaultSuggestionChips.map((_, index) =>
-    formData.get(`suggestionChip-${index}`)?.toString() || "",
+  const suggestionChips = [0, 1, 2].map(
+    (index) => formData.get(`suggestionChip-${index}`)?.toString() || "",
   );
-  const suggestionRules = defaultSuggestionRules.map((_, index) => ({
-    keywords: (formData.get(`ruleKeywords-${index}`)?.toString() || "")
+  const ruleIds = formData.getAll("ruleId").map((ruleId) => ruleId.toString());
+  const suggestionRules = ruleIds.map((ruleId) => ({
+    keywords: (formData.get(`ruleKeywords-${ruleId}`)?.toString() || "")
       .split(",")
       .map((keyword) => keyword.trim()),
     chips: [
-      formData.get(`ruleChip-${index}-0`)?.toString() || "",
-      formData.get(`ruleChip-${index}-1`)?.toString() || "",
-      formData.get(`ruleChip-${index}-2`)?.toString() || "",
+      formData.get(`ruleChip-${ruleId}-0`)?.toString() || "",
+      formData.get(`ruleChip-${ruleId}-1`)?.toString() || "",
+      formData.get(`ruleChip-${ruleId}-2`)?.toString() || "",
     ],
   }));
 
@@ -55,12 +53,32 @@ export const action = async ({ request }) => {
 };
 
 export default function Suggestions() {
-  const { defaultSuggestionChips, defaultSuggestionRules, settings } = useLoaderData();
+  const { settings } = useLoaderData();
   const actionData = useActionData();
   const navigation = useNavigation();
+  const [rules, setRules] = useState(() =>
+    settings.suggestionRules.map((rule, index) => ({
+      ...rule,
+      id: `rule-${index}`,
+    })),
+  );
   const isSaving = navigation.state === "submitting";
   const suggestionChips = settings.suggestionChips;
-  const suggestionRules = settings.suggestionRules;
+
+  const addRule = () => {
+    setRules((currentRules) => [
+      ...currentRules,
+      {
+        id: `rule-${Date.now()}`,
+        keywords: [],
+        chips: [],
+      },
+    ]);
+  };
+
+  const deleteRule = (ruleId) => {
+    setRules((currentRules) => currentRules.filter((rule) => rule.id !== ruleId));
+  };
 
   return (
     <s-page>
@@ -85,9 +103,60 @@ export default function Suggestions() {
               <label htmlFor="suggestionsEnabled">Show suggested reply chips</label>
             </div>
 
+            <div className="rule-editor">
+              <div className="section-header">
+                <h2>Keyword rules</h2>
+                <button type="button" className="secondary-button" onClick={addRule}>
+                  Add rule
+                </button>
+              </div>
+              {rules.map((rule, index) => {
+                return (
+                  <div className="rule-form" key={rule.id}>
+                    <input type="hidden" name="ruleId" value={rule.id} />
+                    <div className="rule-form-header">
+                      <span>Rule {index + 1}</span>
+                      <button
+                        type="button"
+                        className="text-button"
+                        onClick={() => deleteRule(rule.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    <div className="field">
+                      <label htmlFor={`ruleKeywords-${rule.id}`}>Keywords</label>
+                      <input
+                        id={`ruleKeywords-${rule.id}`}
+                        name={`ruleKeywords-${rule.id}`}
+                        defaultValue={rule.keywords.join(", ")}
+                      />
+                    </div>
+                    <div className="field-grid">
+                      {[0, 1, 2].map((chipIndex) => (
+                        <div className="field" key={chipIndex}>
+                          <label htmlFor={`ruleChip-${rule.id}-${chipIndex}`}>
+                            Chip {chipIndex + 1}
+                          </label>
+                          <input
+                            id={`ruleChip-${rule.id}-${chipIndex}`}
+                            name={`ruleChip-${rule.id}-${chipIndex}`}
+                            defaultValue={rule.chips[chipIndex] || ""}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+              {rules.length === 0 && (
+                <div className="empty-state">No keyword rules configured.</div>
+              )}
+            </div>
+
             <div className="chip-editor">
               <h2>Default chips</h2>
-              {defaultSuggestionChips.map((_, index) => (
+              {[0, 1, 2].map((index) => (
                 <div className="field" key={index}>
                   <label htmlFor={`suggestionChip-${index}`}>Chip {index + 1}</label>
                   <input
@@ -97,42 +166,6 @@ export default function Suggestions() {
                   />
                 </div>
               ))}
-            </div>
-
-            <div className="rule-editor">
-              <h2>Keyword rules</h2>
-              {defaultSuggestionRules.map((_, index) => {
-                const rule = suggestionRules[index] || { keywords: [], chips: [] };
-                return (
-                  <div className="rule-form" key={index}>
-                    <div className="rule-form-header">
-                      <span>Rule {index + 1}</span>
-                    </div>
-                    <div className="field">
-                      <label htmlFor={`ruleKeywords-${index}`}>Keywords</label>
-                      <input
-                        id={`ruleKeywords-${index}`}
-                        name={`ruleKeywords-${index}`}
-                        defaultValue={rule.keywords.join(", ")}
-                      />
-                    </div>
-                    <div className="field-grid">
-                      {[0, 1, 2].map((chipIndex) => (
-                        <div className="field" key={chipIndex}>
-                          <label htmlFor={`ruleChip-${index}-${chipIndex}`}>
-                            Chip {chipIndex + 1}
-                          </label>
-                          <input
-                            id={`ruleChip-${index}-${chipIndex}`}
-                            name={`ruleChip-${index}-${chipIndex}`}
-                            defaultValue={rule.chips[chipIndex] || ""}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
             </div>
 
             <div className="actions">
@@ -211,6 +244,13 @@ export default function Suggestions() {
           line-height: 1.25;
         }
 
+        .section-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+        }
+
         .rule-form {
           display: grid;
           gap: 10px;
@@ -221,9 +261,43 @@ export default function Suggestions() {
         }
 
         .rule-form-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
           color: #303030;
           font-size: 13px;
           font-weight: 650;
+        }
+
+        .secondary-button,
+        .text-button {
+          border: 0;
+          background: transparent;
+          color: #1f2937;
+          font: inherit;
+          font-size: 13px;
+          font-weight: 650;
+          cursor: pointer;
+        }
+
+        .secondary-button {
+          border: 1px solid #c9c9c9;
+          border-radius: 6px;
+          padding: 8px 10px;
+          background: #fff;
+        }
+
+        .text-button {
+          padding: 0;
+        }
+
+        .empty-state {
+          padding: 14px;
+          border: 1px dashed #c9c9c9;
+          border-radius: 8px;
+          color: #616161;
+          font-size: 13px;
         }
 
         .field-grid {

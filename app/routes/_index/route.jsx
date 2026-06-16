@@ -15,9 +15,9 @@ export default function App() {
   return (
     <div className={styles.index}>
       <div className={styles.content}>
-        <h1 className={styles.heading}>Shop chat agent reference app</h1>
+        <h1 className={styles.heading}>Shop chat agent</h1>
         <p className={styles.text}>
-          A reference app for shop chat agent.
+          app for shop chat agent.
         </p>
       </div>
     </div>

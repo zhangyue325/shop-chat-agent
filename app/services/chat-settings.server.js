@@ -6,17 +6,16 @@ export const defaultSystemPrompt =
   systemPrompts.systemPrompts.standardAssistant.content;
 export const defaultBrandDescription = "";
 export const defaultProductOffering = "";
-export const defaultHumanAssistantUrl = "https://www.pazzion.com/pages/contact";
+export const defaultHumanAssistantUrl = "";
 export const defaultSuggestionsEnabled = true;
 export const defaultSuggestionChips = [
-  "Show me best sellers",
   "Recommend something for me",
-  "What promotions are available?",
 ];
+
 export const defaultSuggestionRules = [
   {
     keywords: ["cart", "checkout"],
-    chips: ["Show me my cart", "How do I check out?"],
+    chips: ["Show me my cart", "Proceed to checkout"],
   },
   {
     keywords: ["shipping", "delivery"],
@@ -31,51 +30,37 @@ export const defaultSuggestionRules = [
     chips: ["What size should I choose?", "Can you compare the sizes?"],
   },
   {
-    keywords: ["product", "recommend", "best seller", "collection"],
-    chips: ["Show me best sellers", "Recommend something similar", "What is new this season?"],
+    keywords: ["product", "recommend", "collection"],
+    chips: ["Recommend something for me"],
   },
 ];
 
 export const defaultWelcomeProducts = [
   {
     id: "welcome-product-1",
-    title: "Everyday Cotton Tee",
-    price: "$29.00",
+    title: "Sample Product 1",
+    price: "$29.00 - $59.00",
     image_url: "https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-product-1_large.png",
     url: "",
   },
   {
     id: "welcome-product-2",
-    title: "Classic Denim Jacket",
+    title: "Sample Product 2",
     price: "$89.00",
     image_url: "https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-product-2_large.png",
     url: "",
   },
   {
     id: "welcome-product-3",
-    title: "Canvas Weekend Tote",
-    price: "$45.00",
+    title: "Sample Product 3",
+    price: "$69.00",
     image_url: "https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-product-3_large.png",
-    url: "",
-  },
-  {
-    id: "welcome-product-4",
-    title: "Minimal Leather Wallet",
-    price: "$39.00",
-    image_url: "https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-product-4_large.png",
-    url: "",
-  },
-  {
-    id: "welcome-product-5",
-    title: "Ribbed Knit Sweater",
-    price: "$64.00",
-    image_url: "https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-product-5_large.png",
     url: "",
   },
 ];
 
-export function normalizeWelcomeProducts(products) {
-  return products.slice(0, 5).map((product, index) => ({
+export function normalizeWelcomeProducts(products = defaultWelcomeProducts) {
+  return products.slice(0, 5).map((product = {}, index) => ({
     id: product.id || `welcome-product-${index + 1}`,
     title: product.title?.trim() || `Product ${index + 1}`,
     price: product.price?.trim() || "",
@@ -87,6 +72,7 @@ export function normalizeWelcomeProducts(products) {
 export function parseWelcomeProducts(productsJson) {
   try {
     const products = JSON.parse(productsJson);
+
     if (Array.isArray(products)) {
       return normalizeWelcomeProducts(products);
     }
@@ -97,38 +83,6 @@ export function parseWelcomeProducts(productsJson) {
   return defaultWelcomeProducts;
 }
 
-export function formatChatSettings(settings) {
-  const brandDescription = settings?.brandDescription || defaultBrandDescription;
-  const productOffering = settings?.productOffering || defaultProductOffering;
-  const suggestionsEnabled =
-    typeof settings?.suggestionsEnabled === "boolean"
-      ? settings.suggestionsEnabled
-      : defaultSuggestionsEnabled;
-
-  return {
-    baseSystemPrompt: normalizeSystemPrompt(settings?.systemPrompt),
-    systemPrompt: composeSystemPrompt({
-      basePrompt: settings?.systemPrompt,
-      brandDescription,
-      productOffering,
-    }),
-    brandDescription,
-    productOffering,
-    welcomeMessage: settings?.welcomeMessage || defaultWelcomeMessage,
-    humanAssistantUrl: normalizeHumanAssistantUrl(settings?.humanAssistantUrl),
-    suggestionsEnabled,
-    suggestionChips: settings?.suggestionChipsJson
-      ? parseSuggestionChips(settings.suggestionChipsJson)
-      : defaultSuggestionChips,
-    suggestionRules: settings?.suggestionRulesJson
-      ? parseSuggestionRules(settings.suggestionRulesJson)
-      : defaultSuggestionRules,
-    welcomeProducts: settings?.welcomeProductsJson
-      ? parseWelcomeProducts(settings.welcomeProductsJson)
-      : defaultWelcomeProducts,
-  };
-}
-
 export function normalizeSuggestionRules(suggestionRules) {
   return suggestionRules
     .map((rule) => ({
@@ -136,7 +90,7 @@ export function normalizeSuggestionRules(suggestionRules) {
       chips: normalizeSuggestionChips(rule.chips || []),
     }))
     .filter((rule) => rule.keywords.length > 0 && rule.chips.length > 0)
-    .slice(0, 5);
+    .slice(0, 50);
 }
 
 export function parseSuggestionRules(suggestionRulesJson) {
@@ -201,8 +155,39 @@ export function normalizeSystemPrompt(systemPrompt) {
 }
 
 export function normalizeHumanAssistantUrl(humanAssistantUrl) {
-  const url = humanAssistantUrl?.trim();
-  return url || defaultHumanAssistantUrl;
+  return humanAssistantUrl?.trim() || defaultHumanAssistantUrl;
+}
+
+export function formatChatSettings(settings) {
+  const brandDescription = settings?.brandDescription || defaultBrandDescription;
+  const productOffering = settings?.productOffering || defaultProductOffering;
+  const suggestionsEnabled =
+    typeof settings?.suggestionsEnabled === "boolean"
+      ? settings.suggestionsEnabled
+      : defaultSuggestionsEnabled;
+
+  return {
+    baseSystemPrompt: normalizeSystemPrompt(settings?.systemPrompt),
+    systemPrompt: composeSystemPrompt({
+      basePrompt: settings?.systemPrompt,
+      brandDescription,
+      productOffering,
+    }),
+    brandDescription,
+    productOffering,
+    welcomeMessage: settings?.welcomeMessage || defaultWelcomeMessage,
+    humanAssistantUrl: normalizeHumanAssistantUrl(settings?.humanAssistantUrl),
+    suggestionsEnabled,
+    suggestionChips: settings?.suggestionChipsJson
+      ? parseSuggestionChips(settings.suggestionChipsJson)
+      : defaultSuggestionChips,
+    suggestionRules: settings?.suggestionRulesJson
+      ? parseSuggestionRules(settings.suggestionRulesJson)
+      : defaultSuggestionRules,
+    welcomeProducts: settings?.welcomeProductsJson
+      ? parseWelcomeProducts(settings.welcomeProductsJson)
+      : defaultWelcomeProducts,
+  };
 }
 
 export async function getChatSettings(shop) {
