@@ -79,9 +79,12 @@
         });
 
         menuList.addEventListener('click', (event) => {
-          const action = event.target?.dataset?.chatAction;
+          const actionButton = event.target?.closest('[data-chat-action]');
+          const action = actionButton?.dataset?.chatAction;
           if (!action) return;
 
+          event.preventDefault();
+          event.stopPropagation();
           this.closeMenu();
 
           if (action === 'new-session') {
@@ -282,13 +285,12 @@
         sessionStorage.removeItem('shopAiConversationId');
         sessionStorage.removeItem('shopAiLastMessage');
         sessionStorage.removeItem('shopAiTokenPollingId');
+        sessionStorage.setItem('shopAiSkipHistoryOnce', 'true');
 
         messagesContainer.innerHTML = '';
         chatInput.value = '';
 
-        const welcomeMessage = window.shopChatConfig?.welcomeMessage || "Ask me anything you are interested in.";
-        ShopAIChat.Message.add(welcomeMessage, 'assistant', messagesContainer);
-        ShopAIChat.Product.showWelcomeProducts();
+        ShopAIChat.showWelcomeState(messagesContainer);
       },
 
       /**
@@ -374,6 +376,11 @@
           });
         }
 
+        const suggestionsElement = messagesContainer.querySelector('.shop-ai-suggestions');
+        if (suggestionsElement) {
+          messagesContainer.appendChild(suggestionsElement);
+        }
+
         this.scrollToBottom();
       }
     },
@@ -453,6 +460,8 @@
        * @param {HTMLElement} messagesContainer - The messages container
        */
       addSuggestions: function(assistantText, messagesContainer) {
+        if (window.shopChatConfig?.suggestionsEnabled === false) return;
+
         this.removeSuggestions(messagesContainer);
 
         const suggestions = this.generateSuggestions(assistantText);
@@ -494,40 +503,32 @@
           }
         };
 
-        if (text.includes('cart') || text.includes('checkout')) {
-          add('Show me my cart');
-          add('How do I check out?');
-        }
+        const suggestionRules = Array.isArray(window.shopChatConfig?.suggestionRules)
+          ? window.shopChatConfig.suggestionRules
+          : [];
 
-        if (text.includes('shipping') || text.includes('delivery')) {
-          add('What are the shipping options?');
-          add('How long does delivery take?');
-        }
+        suggestionRules.forEach(rule => {
+          const keywords = Array.isArray(rule.keywords) ? rule.keywords : [];
+          const chips = Array.isArray(rule.chips) ? rule.chips : [];
+          const isMatch = keywords.some(keyword => keyword && text.includes(keyword.toLowerCase()));
 
-        if (text.includes('return') || text.includes('refund') || text.includes('exchange')) {
-          add('What is the return policy?');
-          add('How do I start an exchange?');
-        }
+          if (isMatch) {
+            chips.forEach(add);
+          }
+        });
 
-        if (text.includes('size') || text.includes('fit')) {
-          add('What size should I choose?');
-          add('Can you compare the sizes?');
-        }
+        const fallbackSuggestions = Array.isArray(window.shopChatConfig?.suggestionChips) &&
+          window.shopChatConfig.suggestionChips.length > 0
+          ? window.shopChatConfig.suggestionChips
+          : [
+              'Show me best sellers',
+              'Recommend something for me',
+              'What promotions are available?'
+            ];
 
-        if (text.includes('product') || text.includes('recommend') || text.includes('best seller') || text.includes('collection')) {
-          add('Show me best sellers');
-          add('Recommend something similar');
-          add('What is new this season?');
+        if (text.includes('interested in') || suggestions.length === 0) {
+          fallbackSuggestions.forEach(add);
         }
-
-        if (text.includes('brand') || text.includes('store')) {
-          add('Introduce this brand to me');
-          add('Show me popular products');
-        }
-
-        add('Show me best sellers');
-        add('Recommend something for me');
-        add('What promotions are available?');
 
         return suggestions;
       },
@@ -748,6 +749,15 @@
             promptType: settings.systemPrompt || config.promptType,
             welcomeMessage: settings.welcomeMessage || config.welcomeMessage,
             humanAssistantUrl: settings.humanAssistantUrl || config.humanAssistantUrl,
+            suggestionsEnabled: typeof settings.suggestionsEnabled === 'boolean'
+              ? settings.suggestionsEnabled
+              : config.suggestionsEnabled,
+            suggestionChips: Array.isArray(settings.suggestionChips) && settings.suggestionChips.length > 0
+              ? settings.suggestionChips
+              : config.suggestionChips,
+            suggestionRules: Array.isArray(settings.suggestionRules) && settings.suggestionRules.length > 0
+              ? settings.suggestionRules
+              : config.suggestionRules,
             welcomeProducts: Array.isArray(settings.welcomeProducts) && settings.welcomeProducts.length > 0
               ? settings.welcomeProducts
               : config.welcomeProducts || ShopAIChat.Product.welcomeProducts
@@ -951,6 +961,12 @@
           }
 
           const data = await response.json();
+          if (sessionStorage.getItem('shopAiConversationId') !== conversationId) {
+            if (messagesContainer.contains(loadingMessage)) {
+              messagesContainer.removeChild(loadingMessage);
+            }
+            return;
+          }
 
           // Remove loading message
           messagesContainer.removeChild(loadingMessage);
@@ -1254,6 +1270,16 @@
     },
 
     /**
+     * Render the configured welcome message and products.
+     * @param {HTMLElement} messagesContainer - The messages container
+     */
+    showWelcomeState: function(messagesContainer) {
+      const welcomeMessage = window.shopChatConfig?.welcomeMessage || "Ask me anything you are interested in.";
+      this.Message.add(welcomeMessage, 'assistant', messagesContainer);
+      this.Product.showWelcomeProducts();
+    },
+
+    /**
      * Initialize the chat application
      */
     init: async function() {
@@ -1266,15 +1292,14 @@
 
       // Check for existing conversation
       const conversationId = sessionStorage.getItem('shopAiConversationId');
+      const skipHistoryOnce = sessionStorage.getItem('shopAiSkipHistoryOnce') === 'true';
 
-      if (conversationId) {
+      if (conversationId && !skipHistoryOnce) {
         // Fetch conversation history
         this.API.fetchChatHistory(conversationId, this.UI.elements.messagesContainer);
       } else {
-        // No previous conversation, show welcome message
-        const welcomeMessage = window.shopChatConfig?.welcomeMessage || "Ask me anything you are interested in.";
-        this.Message.add(welcomeMessage, 'assistant', this.UI.elements.messagesContainer);
-        this.Product.showWelcomeProducts();
+        sessionStorage.removeItem('shopAiSkipHistoryOnce');
+        this.showWelcomeState(this.UI.elements.messagesContainer);
       }
     }
   };

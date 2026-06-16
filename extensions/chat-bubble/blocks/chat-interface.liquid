@@ -43,7 +43,6 @@
 <script>
   window.shopChatConfig = {
     promptType: "standardAssistant",
-    welcomeMessage: {{ block.settings.welcome_message | json }},
     launcherPlacement: {{ block.settings.launcher_placement | json }},
     shopDomain: {{ shop.permanent_domain | json }},
     apiBaseUrl: "https://shop-chat-agent-976732686346.asia-southeast1.run.app"
@@ -76,13 +75,7 @@
           "label": "Top navigation icon"
         }
       ],
-      "default": "header"
-    },
-    {
-      "type": "text",
-      "id": "welcome_message",
-      "label": "Welcome Message",
-      "default": "Ask me anything you are interested in."
+      "default": "bubble"
     }
   ]
 }
