@@ -727,11 +727,17 @@
     align-items: center;
     justify-content: center;
   }
+
+  .shop-ai-product-image a {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
   
   .shop-ai-product-image img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
   }
   
   /* Product Info Styling */

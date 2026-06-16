@@ -1217,6 +1217,7 @@
       createCard: function(product) {
         const card = document.createElement('div');
         card.classList.add('shop-ai-product-card');
+        const productUrl = typeof product.url === 'string' ? product.url.trim() : '';
 
         // Create image container
         const imageContainer = document.createElement('div');
@@ -1230,7 +1231,19 @@
           // If image fails to load, use a fallback placeholder
           this.src = 'https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-image_large.png';
         };
-        imageContainer.appendChild(image);
+
+        if (productUrl) {
+          const imageLink = document.createElement('a');
+          imageLink.href = productUrl;
+          imageLink.target = '_blank';
+          imageLink.rel = 'noopener noreferrer';
+          imageLink.setAttribute('aria-label', `View ${product.title}`);
+          imageLink.appendChild(image);
+          imageContainer.appendChild(imageLink);
+        } else {
+          imageContainer.appendChild(image);
+        }
+
         card.appendChild(imageContainer);
 
         // Add product info
@@ -1243,10 +1256,11 @@
         title.textContent = product.title;
 
         // If product has a URL, make the title a link
-        if (product.url) {
+        if (productUrl) {
           const titleLink = document.createElement('a');
-          titleLink.href = product.url;
+          titleLink.href = productUrl;
           titleLink.target = '_blank';
+          titleLink.rel = 'noopener noreferrer';
           titleLink.textContent = product.title;
           title.textContent = '';
           title.appendChild(titleLink);
