@@ -32,8 +32,9 @@
           headerLauncher: null,
           chatWindow: container.querySelector('.shop-ai-chat-window'),
           closeButton: container.querySelector('.shop-ai-chat-close'),
-          menuButton: container.querySelector('.shop-ai-chat-menu-button'),
-          menuList: container.querySelector('.shop-ai-chat-menu-list'),
+          tabButtons: container.querySelectorAll('.shop-ai-chat-tab'),
+          tabPanels: container.querySelectorAll('.shop-ai-chat-tab-panel'),
+          supportContent: container.querySelector('.shop-ai-support-content'),
           chatInput: container.querySelector('.shop-ai-chat-input input'),
           sendButton: container.querySelector('.shop-ai-chat-send'),
           messagesContainer: container.querySelector('.shop-ai-chat-messages')
@@ -44,6 +45,7 @@
 
         // Set up event listeners
         this.setupEventListeners();
+        this.renderSupportContent();
 
         // Fix for iOS Safari viewport height issues
         if (this.isMobile) {
@@ -60,8 +62,7 @@
         const {
           chatBubble,
           closeButton,
-          menuButton,
-          menuList,
+          tabButtons,
           chatInput,
           sendButton,
           messagesContainer
@@ -73,25 +74,10 @@
         // Close chat window
         closeButton.addEventListener('click', () => this.closeChatWindow());
 
-        menuButton.addEventListener('click', (event) => {
-          event.stopPropagation();
-          this.toggleMenu();
-        });
-
-        menuList.addEventListener('click', (event) => {
-          const actionButton = event.target?.closest('[data-chat-action]');
-          const action = actionButton?.dataset?.chatAction;
-          if (!action) return;
-
-          event.preventDefault();
-          event.stopPropagation();
-          this.closeMenu();
-
-          if (action === 'new-session') {
-            this.startNewSession();
-          } else if (action === 'human-assistant') {
-            this.redirectToHumanAssistant();
-          }
+        tabButtons.forEach((button) => {
+          button.addEventListener('click', () => {
+            this.switchTab(button.dataset.chatTab);
+          });
         });
 
         // Send message when pressing Enter in input
@@ -110,12 +96,6 @@
 
         // Handle window resize to adjust scrolling
         window.addEventListener('resize', () => this.scrollToBottom());
-
-        document.addEventListener('click', (event) => {
-          if (!this.elements.container.contains(event.target)) {
-            this.closeMenu();
-          }
-        });
 
         // Add global click handler for auth links
         document.addEventListener('click', function(event) {
@@ -224,11 +204,17 @@
         chatWindow.classList.toggle('active');
 
         if (chatWindow.classList.contains('active')) {
+          const isShoppingTabActive = this.elements.container
+            .querySelector('[data-chat-panel="shopping"]')
+            ?.classList.contains('active');
+
           // On mobile, prevent body scrolling and delay focus
           if (this.isMobile) {
             document.body.classList.add('shop-ai-chat-open');
-            setTimeout(() => chatInput.focus({ preventScroll: true }), 500);
-          } else {
+            if (isShoppingTabActive) {
+              setTimeout(() => chatInput.focus({ preventScroll: true }), 500);
+            }
+          } else if (isShoppingTabActive) {
             chatInput.focus();
           }
           // Always scroll messages to bottom when opening
@@ -246,7 +232,6 @@
         const { chatWindow, chatInput } = this.elements;
 
         chatWindow.classList.remove('active');
-        this.closeMenu();
 
         // On mobile, blur input to hide keyboard and enable body scrolling
         if (this.isMobile) {
@@ -256,25 +241,41 @@
       },
 
       /**
-       * Toggle the chat options menu.
+       * Switch between the shopping assistant and support content tabs.
+       * @param {string} tabName - Tab identifier to activate
        */
-      toggleMenu: function() {
-        const { menuButton, menuList } = this.elements;
-        const isOpen = !menuList.hidden;
+      switchTab: function(tabName, options = {}) {
+        const { tabButtons, tabPanels, chatInput } = this.elements;
+        const selectedTab = tabName === 'support' ? 'support' : 'shopping';
 
-        menuList.hidden = isOpen;
-        menuButton.setAttribute('aria-expanded', String(!isOpen));
+        tabButtons.forEach((button) => {
+          const isActive = button.dataset.chatTab === selectedTab;
+          button.classList.toggle('active', isActive);
+          button.setAttribute('aria-selected', String(isActive));
+        });
+
+        tabPanels.forEach((panel) => {
+          const isActive = panel.dataset.chatPanel === selectedTab;
+          panel.classList.toggle('active', isActive);
+          panel.hidden = !isActive;
+        });
+
+        if (selectedTab === 'shopping') {
+          if (!options.skipFocus) {
+            chatInput.focus();
+          }
+          this.scrollToBottom();
+        }
       },
 
       /**
-       * Close the chat options menu.
+       * Render merchant-configured support HTML in the Support Team tab.
        */
-      closeMenu: function() {
-        const { menuButton, menuList } = this.elements;
-        if (!menuButton || !menuList) return;
+      renderSupportContent: function() {
+        const { supportContent } = this.elements;
+        if (!supportContent) return;
 
-        menuList.hidden = true;
-        menuButton.setAttribute('aria-expanded', 'false');
+        supportContent.innerHTML = window.shopChatConfig?.supportTeamHtml || '';
       },
 
       /**
@@ -291,14 +292,6 @@
         chatInput.value = '';
 
         ShopAIChat.showWelcomeState(messagesContainer);
-      },
-
-      /**
-       * Redirect to the configured human assistant page.
-       */
-      redirectToHumanAssistant: function() {
-        const url = window.shopChatConfig?.humanAssistantUrl || 'https://www.pazzion.com/pages/contact';
-        window.location.href = url;
       },
 
       /**
@@ -741,12 +734,13 @@
         if (!shopDomain || !apiBaseUrl) return;
 
         try {
-          const settingsUrl = `${apiBaseUrl}/chat-settings?shop=${encodeURIComponent(shopDomain)}`;
+          const settingsUrl = `${apiBaseUrl}/chat-settings?shop=${encodeURIComponent(shopDomain)}&t=${Date.now()}`;
           const response = await fetch(settingsUrl, {
             method: 'GET',
             headers: {
               'Accept': 'application/json'
             },
+            cache: 'no-store',
             mode: 'cors'
           });
 
@@ -759,7 +753,7 @@
             ...config,
             promptType: settings.systemPrompt || config.promptType,
             welcomeMessage: settings.welcomeMessage || config.welcomeMessage,
-            humanAssistantUrl: settings.humanAssistantUrl || config.humanAssistantUrl,
+            supportTeamHtml: settings.supportTeamHtml || config.supportTeamHtml,
             suggestionsEnabled: typeof settings.suggestionsEnabled === 'boolean'
               ? settings.suggestionsEnabled
               : config.suggestionsEnabled,

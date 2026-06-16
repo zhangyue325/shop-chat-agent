@@ -18,6 +18,7 @@ export default function App() {
       <s-app-nav>
         <s-link href="/app">Greetings</s-link>
         <s-link href="/app/system">System</s-link>
+        <s-link href="/app/support">Support Team</s-link>
         <s-link href="/app/suggestions">Suggestions</s-link>
       </s-app-nav>
       <Outlet />

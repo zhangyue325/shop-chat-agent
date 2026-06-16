@@ -43,6 +43,7 @@ export const action = async ({ request }) => {
     productOffering: settings.productOffering,
     welcomeMessage: settings.welcomeMessage,
     humanAssistantUrl: settings.humanAssistantUrl,
+    supportTeamHtml: settings.supportTeamHtml,
     suggestionsEnabled,
     suggestionChips: normalizeSuggestionChips(suggestionChips),
     suggestionRules: normalizeSuggestionRules(suggestionRules),
@@ -82,12 +83,11 @@ export default function Suggestions() {
 
   return (
     <s-page>
-      <ui-title-bar title="Suggestions" />
+      <ui-title-bar title="Shop Chat Agent" />
 
       <s-section>
         <div className="settings-shell">
           <div className="intro">
-            <p className="eyebrow">Storefront assistant</p>
             <h1>Suggestions</h1>
             <p>Control the reply suggestion chips shown below assistant responses.</p>
           </div>

@@ -7,6 +7,7 @@ export const defaultSystemPrompt =
 export const defaultBrandDescription = "";
 export const defaultProductOffering = "";
 export const defaultHumanAssistantUrl = "";
+export const defaultSupportTeamHtml = '<p>You can contact us via <a href="https://api.whatsapp.com/send/?phone=1234567890">WhatsApp</a> or drop an email to <a href="mailto:sample@gmail.com">sample@gmail.com</a>. We\'ll respond as soon as possible.</p>';
 export const defaultSuggestionsEnabled = true;
 export const defaultSuggestionChips = [
   "Recommend something for me",
@@ -158,6 +159,10 @@ export function normalizeHumanAssistantUrl(humanAssistantUrl) {
   return humanAssistantUrl?.trim() || defaultHumanAssistantUrl;
 }
 
+export function normalizeSupportTeamHtml(supportTeamHtml) {
+  return supportTeamHtml?.trim() || defaultSupportTeamHtml;
+}
+
 export function formatChatSettings(settings) {
   const brandDescription = settings?.brandDescription || defaultBrandDescription;
   const productOffering = settings?.productOffering || defaultProductOffering;
@@ -177,6 +182,7 @@ export function formatChatSettings(settings) {
     productOffering,
     welcomeMessage: settings?.welcomeMessage || defaultWelcomeMessage,
     humanAssistantUrl: normalizeHumanAssistantUrl(settings?.humanAssistantUrl),
+    supportTeamHtml: normalizeSupportTeamHtml(settings?.supportTeamHtml),
     suggestionsEnabled,
     suggestionChips: settings?.suggestionChipsJson
       ? parseSuggestionChips(settings.suggestionChipsJson)
@@ -211,6 +217,7 @@ export async function getChatSettings(shop) {
         "productOffering",
         "welcomeMessage",
         "humanAssistantUrl",
+        "supportTeamHtml",
         "suggestionsEnabled",
         "suggestionChipsJson",
         "suggestionRulesJson",
@@ -232,6 +239,7 @@ export async function saveChatSettings(shop, settings) {
   const brandDescription = settings.brandDescription?.trim() || defaultBrandDescription;
   const productOffering = settings.productOffering?.trim() || defaultProductOffering;
   const humanAssistantUrl = normalizeHumanAssistantUrl(settings.humanAssistantUrl);
+  const supportTeamHtml = normalizeSupportTeamHtml(settings.supportTeamHtml);
   const suggestionsEnabled =
     typeof settings.suggestionsEnabled === "boolean"
       ? settings.suggestionsEnabled
@@ -257,6 +265,7 @@ export async function saveChatSettings(shop, settings) {
         productOffering,
         welcomeMessage: settings.welcomeMessage,
         humanAssistantUrl,
+        supportTeamHtml,
         suggestionsEnabled,
         suggestionChipsJson,
         suggestionRulesJson,
@@ -268,6 +277,7 @@ export async function saveChatSettings(shop, settings) {
         productOffering,
         welcomeMessage: settings.welcomeMessage,
         humanAssistantUrl,
+        supportTeamHtml,
         suggestionsEnabled,
         suggestionChipsJson,
         suggestionRulesJson,
@@ -285,6 +295,7 @@ export async function saveChatSettings(shop, settings) {
       "productOffering",
       "welcomeMessage",
       "humanAssistantUrl",
+      "supportTeamHtml",
       "suggestionsEnabled",
       "suggestionChipsJson",
       "suggestionRulesJson",
@@ -300,6 +311,7 @@ export async function saveChatSettings(shop, settings) {
       ${productOffering},
       ${settings.welcomeMessage},
       ${humanAssistantUrl},
+      ${supportTeamHtml},
       ${suggestionsEnabled},
       ${suggestionChipsJson},
       ${suggestionRulesJson},
@@ -313,6 +325,7 @@ export async function saveChatSettings(shop, settings) {
       "productOffering" = excluded."productOffering",
       "welcomeMessage" = excluded."welcomeMessage",
       "humanAssistantUrl" = excluded."humanAssistantUrl",
+      "supportTeamHtml" = excluded."supportTeamHtml",
       "suggestionsEnabled" = excluded."suggestionsEnabled",
       "suggestionChipsJson" = excluded."suggestionChipsJson",
       "suggestionRulesJson" = excluded."suggestionRulesJson",

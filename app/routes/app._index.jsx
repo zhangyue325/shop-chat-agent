@@ -36,6 +36,7 @@ export const action = async ({ request }) => {
     productOffering: settings.productOffering,
     welcomeMessage,
     humanAssistantUrl: settings.humanAssistantUrl,
+    supportTeamHtml: settings.supportTeamHtml,
     suggestionsEnabled: settings.suggestionsEnabled,
     suggestionChips: settings.suggestionChips,
     suggestionRules: settings.suggestionRules,
@@ -54,12 +55,11 @@ export default function Greetings() {
 
   return (
     <s-page>
-      <ui-title-bar title="Greetings" />
+      <ui-title-bar title="Shop Chat Agent" />
 
       <s-section>
         <div className="settings-shell">
           <div className="intro">
-            <p className="eyebrow">Storefront assistant</p>
             <h1>Greetings</h1>
             <p>Control the first message shoppers see and the product cards shown below it.</p>
           </div>
@@ -122,7 +122,7 @@ export default function Greetings() {
 
             <div className="actions">
               <button type="submit" disabled={isSaving}>
-                {isSaving ? "Saving..." : "Save greetings"}
+                {isSaving ? "Saving..." : "Save"}
               </button>
               {actionData?.saved && <span>Saved</span>}
             </div>

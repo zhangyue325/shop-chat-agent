@@ -16,17 +16,15 @@ export const action = async ({ request }) => {
   const { session } = await authenticate.admin(request);
   const settings = await getChatSettings(session.shop);
   const formData = await request.formData();
-  const systemPrompt = formData.get("systemPrompt")?.toString();
-  const brandDescription = formData.get("brandDescription")?.toString();
-  const productOffering = formData.get("productOffering")?.toString();
+  const supportTeamHtml = formData.get("supportTeamHtml")?.toString() || "";
 
   await saveChatSettings(session.shop, {
-    systemPrompt,
-    brandDescription,
-    productOffering,
+    systemPrompt: settings.baseSystemPrompt,
+    brandDescription: settings.brandDescription,
+    productOffering: settings.productOffering,
     welcomeMessage: settings.welcomeMessage,
     humanAssistantUrl: settings.humanAssistantUrl,
-    supportTeamHtml: settings.supportTeamHtml,
+    supportTeamHtml,
     suggestionsEnabled: settings.suggestionsEnabled,
     suggestionChips: settings.suggestionChips,
     suggestionRules: settings.suggestionRules,
@@ -36,7 +34,7 @@ export const action = async ({ request }) => {
   return { saved: true };
 };
 
-export default function System() {
+export default function SupportTeam() {
   const { settings } = useLoaderData();
   const actionData = useActionData();
   const navigation = useNavigation();
@@ -49,44 +47,23 @@ export default function System() {
       <s-section>
         <div className="settings-shell">
           <div className="intro">
-            <h1>System</h1>
-            <p>Control assistant behavior and product context.</p>
+            <h1>Support Team</h1>
           </div>
 
           <Form method="post" className="panel">
             <div className="field">
-              <label htmlFor="systemPrompt">System prompt</label>
+              <label htmlFor="supportTeamHtml">Design the information displayed in the Support Team tab in HTML</label>
               <textarea
-                id="systemPrompt"
-                name="systemPrompt"
+                id="supportTeamHtml"
+                name="supportTeamHtml"
                 rows={10}
-                defaultValue={settings.baseSystemPrompt}
-              />
-            </div>
-
-            <div className="field">
-              <label htmlFor="brandDescription">Describe your brand</label>
-              <textarea
-                id="brandDescription"
-                name="brandDescription"
-                rows={5}
-                defaultValue={settings.brandDescription}
-              />
-            </div>
-
-            <div className="field">
-              <label htmlFor="productOffering">Product offering</label>
-              <textarea
-                id="productOffering"
-                name="productOffering"
-                rows={5}
-                defaultValue={settings.productOffering}
+                defaultValue={settings.supportTeamHtml}
               />
             </div>
 
             <div className="actions">
               <button type="submit" disabled={isSaving}>
-                {isSaving ? "Saving..." : "Save system"}
+                {isSaving ? "Saving..." : "Save"}
               </button>
               {actionData?.saved && <span>Saved</span>}
             </div>
@@ -149,7 +126,6 @@ export default function System() {
           font-weight: 650;
         }
 
-        .field input,
         .field textarea {
           width: 100%;
           box-sizing: border-box;
@@ -158,9 +134,6 @@ export default function System() {
           padding: 9px 10px;
           color: #202223;
           font: inherit;
-        }
-
-        .field textarea {
           resize: vertical;
         }
 
