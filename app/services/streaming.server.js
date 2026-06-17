@@ -58,10 +58,16 @@ export function createStreamManager(encoder, controller) {
         error: 'Authentication failed with Claude API',
         details: 'Please check your API key in environment variables'
       });
-    } else if (error.status === 429 || error.status === 529 || error.message.includes('Overloaded')) {
+    } else if (error.status === 429) {
       sendError({
-        type: 'rate_limit_exceeded',
-        error: 'Rate limit exceeded',
+        type: '429_rate_limit_exceeded',
+        error: '429 Rate limit exceeded',
+        details: 'Please try again later'
+      });
+    } else if (error.status === 529) {
+      sendError({
+        type: '529_rate_limit_exceeded',
+        error: '529 service overloaded',
         details: 'Please try again later'
       });
     } else {

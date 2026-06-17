@@ -108,12 +108,23 @@ export function createToolService() {
         : `${formatPrice(minPrice)} - ${formatPrice(maxPrice)}`
       : 'Price not available';
 
+    const imageUrl =
+      product.media?.find((media) => media?.type === 'image')?.url ||
+      product.media?.[0]?.url ||
+      product.variants?.[0]?.media?.find((media) => media?.type === 'image')?.url ||
+      product.variants?.[0]?.media?.[0]?.url ||
+      '';
+
+    const description = typeof product.description === 'string'
+      ? product.description
+      : product.description?.html || '';
+
     return {
-      id: product.product_id || `product-${Math.random().toString(36).substring(7)}`,
+      id: product.product_id || product.id || `product-${Math.random().toString(36).substring(7)}`,
       title: product.title || 'Product',
       price: price,
-      image_url: product.variants[0].media[0].url || '',
-      description: product.description || '',
+      image_url: imageUrl,
+      description,
       url: product.url || ''
     };
   };

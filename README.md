@@ -44,48 +44,6 @@ You can find the app demo in this [demo store](https://shop-chat-agent-dev-store
     ```
     shopify app dev --use-localhost --reset
     ```
-    2.3. Select your organization
-    ```
-    2.4  Which organization is this work for?
-    >  Organization name
-    ```
-    2.5. Select Yes to create this project as a new app
-    ```
-    Create this project as a new app on Shopify?
-    >  (y) Yes, create it as a new app
-    ```
-    2.6. Keep the configuration file name blank
-    ```
-    ?  Configuration file name:
-    ✔  (empty)
-    ```
-    2.7. Overwrite existing configuration file
-    ```
-    ?  Configuration file shopify.app.toml already exists. Do you want to choose a different configuration name?
-    ✔  No, overwrite my existing configuration file
-    ```
-    2.8. Select your dev store
-    ```
-    ?  Which store would you like to use to view your project?
-    ✔  your-store
-    ```
-    2.9. Enter your store password
-    ```
-    ? Incorrect store password (
-    https://your-store.myshopify.com/admin/online_store/preferences ). Please
-    try again:
-    >  *****█________
-    ```
-    2.10. Generate a certificate for localhost
-    ```
-    ?  --use-localhost requires a certificate for `localhost`. Generate it now?
-    >  Yes, use mkcert to generate it
-    ```
-    2.11. Allow automatic URL updates
-    ```
-    Have Shopify automatically update your app's URL in order to create a preview experience?
-    > Yes, automatically update
-    ```
 You can find the details (including MCP capabilities, basic test cases) of Shopify MCP in [Shopify's documentation](https://shopify.dev/docs/apps/build/storefront-mcp).
 
 # How to Use It (GCP Run host)
@@ -94,4 +52,5 @@ Coming soon...
 # Features To Be Developed
 - ~~suggested reply chips (completed)~~
 - Smarter suggested reply chips
+- migrate ephemeral database from sqlite in GCP to permanant database (maybe in subapase)
 - Dashboard for the AI agent (agent sessions, session topic, CR, CVR, and so on)

@@ -8,6 +8,7 @@ import AppConfig from "../services/config.server";
 import { createSseStream } from "../services/streaming.server";
 import { createClaudeService } from "../services/claude.server";
 import { createToolService } from "../services/tool.server";
+import { getChatSettings } from "../services/chat-settings.server";
 
 
 /**
@@ -78,7 +79,6 @@ async function handleChatRequest(request) {
 
     // Generate or use existing conversation ID
     const conversationId = body.conversation_id || Date.now().toString();
-    const promptType = body.prompt_type || AppConfig.api.defaultPromptType;
 
     // Create a stream for the response
     const responseStream = createSseStream(async (stream) => {
@@ -86,7 +86,6 @@ async function handleChatRequest(request) {
         request,
         userMessage,
         conversationId,
-        promptType,
         stream
       });
     });
@@ -109,14 +108,12 @@ async function handleChatRequest(request) {
  * @param {Request} params.request - The request object
  * @param {string} params.userMessage - The user's message
  * @param {string} params.conversationId - The conversation ID
- * @param {string} params.promptType - The prompt type
  * @param {Object} params.stream - Stream manager for sending responses
  */
 async function handleChatSession({
   request,
   userMessage,
   conversationId,
-  promptType,
   stream
 }) {
   // Initialize services
@@ -126,6 +123,8 @@ async function handleChatSession({
   // Initialize MCP client
   const shopId = request.headers.get("X-Shopify-Shop-Id");
   const shopDomain = request.headers.get("Origin");
+  const shop = getShopFromOrigin(shopDomain);
+  const settings = await getChatSettings(shop);
   const { mcpApiUrl } = await getCustomerAccountUrls(shopDomain, conversationId);
 
   const mcpClient = new MCPClient(
@@ -183,7 +182,7 @@ async function handleChatSession({
       finalMessage = await claudeService.streamConversation(
         {
           messages: conversationHistory,
-          promptType,
+          systemPrompt: settings.systemPrompt,
           tools: mcpClient.tools
         },
         {
@@ -278,6 +277,14 @@ async function handleChatSession({
   } catch (error) {
     // The streaming handler takes care of error handling
     throw error;
+  }
+}
+
+function getShopFromOrigin(origin) {
+  try {
+    return new URL(origin).hostname;
+  } catch (error) {
+    return null;
   }
 }
 

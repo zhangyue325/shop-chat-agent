@@ -4,7 +4,7 @@
  */
 import { Anthropic } from "@anthropic-ai/sdk";
 import AppConfig from "./config.server";
-import systemPrompts from "../prompts/prompts.json";
+import { normalizeSystemPrompt } from "./chat-settings.server";
 
 /**
  * Creates a Claude service instance
@@ -19,7 +19,7 @@ export function createClaudeService(apiKey = process.env.CLAUDE_API_KEY) {
    * Streams a conversation with Claude
    * @param {Object} params - Stream parameters
    * @param {Array} params.messages - Conversation history
-   * @param {string} params.promptType - The type of system prompt to use
+   * @param {string} params.systemPrompt - The system prompt to use
    * @param {Array} params.tools - Available tools for Claude
    * @param {Object} streamHandlers - Stream event handlers
    * @param {Function} streamHandlers.onText - Handles text chunks
@@ -29,11 +29,10 @@ export function createClaudeService(apiKey = process.env.CLAUDE_API_KEY) {
    */
   const streamConversation = async ({
     messages,
-    promptType = AppConfig.api.defaultPromptType,
+    systemPrompt,
     tools
   }, streamHandlers) => {
-    // Get system prompt from configuration or use default
-    const systemInstruction = getSystemPrompt(promptType);
+    const systemInstruction = getSystemPrompt(systemPrompt);
 
     // Create stream
     const stream = await anthropic.messages.stream({
@@ -73,15 +72,11 @@ export function createClaudeService(apiKey = process.env.CLAUDE_API_KEY) {
   };
 
   /**
-   * Gets the system prompt content for a given prompt type
-   * @param {string} promptType - The prompt type to retrieve
+   * Gets the normalized system prompt content.
+   * @param {string} systemPrompt - The system prompt to retrieve
    * @returns {string} The system prompt content
    */
-  const getSystemPrompt = (promptType) => {
-    return systemPrompts.systemPrompts[promptType]?.content ||
-      promptType ||
-      systemPrompts.systemPrompts[AppConfig.api.defaultPromptType].content;
-  };
+  const getSystemPrompt = (systemPrompt) => normalizeSystemPrompt(systemPrompt);
 
   return {
     streamConversation,

@@ -894,10 +894,18 @@
             ShopAIChat.Message.addSuggestions(currentMessageElement.dataset.rawText, messagesContainer);
             break;
 
-          case 'rate_limit_exceeded':
-            console.error('Rate limit exceeded:', data.error);
+          case '429_rate_limit_exceeded':
+            console.error('429 Rate limit exceeded:', data.error);
             ShopAIChat.UI.removeTypingIndicator();
-            currentMessageElement.textContent = "Sorry, our servers are currently busy. Please try again later.";
+            currentMessageElement.textContent = "Sorry, rate limit exceeded (429). Please try again later.";
+            currentMessageElement.dataset.rawText = currentMessageElement.textContent;
+            ShopAIChat.Message.addSuggestions(currentMessageElement.dataset.rawText, messagesContainer);
+            break;
+
+          case '529_rate_limit_exceeded':
+            console.error('529 Service overloaded:', data.error);
+            ShopAIChat.UI.removeTypingIndicator();
+            currentMessageElement.textContent = "Sorry, Service overloaded (529). Please try again later.";
             currentMessageElement.dataset.rawText = currentMessageElement.textContent;
             ShopAIChat.Message.addSuggestions(currentMessageElement.dataset.rawText, messagesContainer);
             break;
@@ -911,11 +919,12 @@
             ShopAIChat.UI.displayProductResults(data.products);
             break;
 
-          case 'tool_use':
-            if (data.tool_use_message) {
-              ShopAIChat.Message.addToolUse(data.tool_use_message, messagesContainer);
-            }
-            break;
+          // do not display tool use in chat box
+          // case 'tool_use':
+          //   if (data.tool_use_message) {
+          //     ShopAIChat.Message.addToolUse(data.tool_use_message, messagesContainer);
+          //   }
+          //   break;
 
           case 'new_message':
             ShopAIChat.Message.removeSuggestions(messagesContainer);
