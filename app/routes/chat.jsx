@@ -171,7 +171,7 @@ async function handleChatSession({
       }
       return {
         role: dbMessage.role,
-        content
+        content: normalizeClaudeContent(content)
       };
     });
 
@@ -286,6 +286,18 @@ function getShopFromOrigin(origin) {
   } catch (error) {
     return null;
   }
+}
+
+function normalizeClaudeContent(content) {
+  if (Array.isArray(content)) {
+    return content;
+  }
+
+  if (typeof content === "string") {
+    return [{ type: "text", text: content }];
+  }
+
+  return [{ type: "text", text: String(content ?? "") }];
 }
 
 /**
