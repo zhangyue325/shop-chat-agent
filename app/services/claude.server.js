@@ -72,6 +72,52 @@ export function createClaudeService(apiKey = process.env.CLAUDE_API_KEY) {
   };
 
   /**
+   * Generates concise suggested reply chips for the next customer action.
+   * @param {Object} params - Suggestion parameters
+   * @param {string} params.userMessage - The latest user message
+   * @param {string} params.assistantMessage - The latest assistant response
+   * @returns {Promise<Array<string>>} Suggested reply chip labels
+   */
+  const generateSuggestedReplies = async ({
+    userMessage,
+    assistantMessage
+  }) => {
+    const response = await anthropic.messages.create({
+      model: AppConfig.api.defaultModel,
+      max_tokens: 200,
+      temperature: 0.2,
+      system: [
+        "Generate suggested reply chips for an ecommerce chat assistant based on the AI response.",
+        "Return JSON only: an array of 0 to 3 strings.",
+        "Each string must be a concise customer reply or question, 20 characters or fewer.",
+        "Do not include markdown, explanations, numbering, or assistant-like text."
+      ].join("\n"),
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: [
+                `Customer message:\n${userMessage || ""}`,
+                `Assistant response:\n${assistantMessage || ""}`
+              ].join("\n\n")
+            }
+          ]
+        }
+      ]
+    });
+
+    const text = response.content
+      ?.filter((block) => block.type === "text")
+      .map((block) => block.text)
+      .join("")
+      .trim();
+
+    return normalizeSuggestedReplies(text);
+  };
+
+  /**
    * Gets the normalized system prompt content.
    * @param {string} systemPrompt - The system prompt to retrieve
    * @returns {string} The system prompt content
@@ -80,8 +126,30 @@ export function createClaudeService(apiKey = process.env.CLAUDE_API_KEY) {
 
   return {
     streamConversation,
+    generateSuggestedReplies,
     getSystemPrompt
   };
+}
+
+function normalizeSuggestedReplies(rawText) {
+  if (!rawText) return [];
+
+  try {
+    const parsed = JSON.parse(rawText);
+
+    if (Array.isArray(parsed)) {
+      return parsed
+        .map((suggestion) => String(suggestion || "").trim())
+        .filter(Boolean)
+        .map((suggestion) => suggestion.slice(0, 20))
+        .filter((suggestion, index, suggestions) => suggestions.indexOf(suggestion) === index)
+        .slice(0, 3);
+    }
+  } catch (error) {
+    console.error("Error parsing suggested replies:", error);
+  }
+
+  return [];
 }
 
 export default {

@@ -15,6 +15,8 @@ import { createClaudeService } from "../services/claude.server";
 import { createToolService } from "../services/tool.server";
 import { getChatSettings } from "../services/chat-settings.server";
 
+const MAX_CLAUDE_HISTORY_MESSAGES = 20;
+
 /**
  * Rract Router loader function for handling GET requests
  */
@@ -210,9 +212,14 @@ async function handleChatSession({
   let finalMessage = { role: "user", content: userMessage };
 
   while (finalMessage.stop_reason !== "end_turn") {
+    const claudeMessages = trimConversationHistoryForClaude(
+      conversationHistory,
+      MAX_CLAUDE_HISTORY_MESSAGES,
+    );
+
     finalMessage = await claudeService.streamConversation(
       {
-        messages: conversationHistory,
+        messages: claudeMessages,
         systemPrompt: settings.systemPrompt,
         tools: mcpClient.tools,
       },
@@ -314,9 +321,6 @@ async function handleChatSession({
     );
   }
 
-  // Signal end of turn
-  stream.sendMessage({ type: "end_turn" });
-
   // Send product results if available
   if (productState.selected.length > 0) {
     stream.sendMessage({
@@ -324,6 +328,17 @@ async function handleChatSession({
       products: productState.selected,
     });
   }
+
+  await sendSuggestedReplies({
+    claudeService,
+    stream,
+    userMessage,
+    assistantMessage: extractAssistantText(finalMessage),
+    suggestionsEnabled: settings.suggestionsEnabled,
+  });
+
+  // Signal end of turn
+  stream.sendMessage({ type: "end_turn" });
 }
 
 function getShopFromOrigin(origin) {
@@ -344,6 +359,69 @@ function normalizeClaudeContent(content) {
   }
 
   return [{ type: "text", text: String(content ?? "") }];
+}
+
+function trimConversationHistoryForClaude(messages, maxMessages) {
+  if (!Array.isArray(messages) || messages.length <= maxMessages) {
+    return messages;
+  }
+
+  const trimmedMessages = messages.slice(-maxMessages);
+
+  while (
+    trimmedMessages.length > 0 &&
+    trimmedMessages[0].role === "user" &&
+    hasToolResult(trimmedMessages[0])
+  ) {
+    trimmedMessages.shift();
+  }
+
+  return trimmedMessages;
+}
+
+function hasToolResult(message) {
+  return Array.isArray(message?.content) &&
+    message.content.some((block) => block?.type === "tool_result");
+}
+
+function extractAssistantText(message) {
+  if (!Array.isArray(message?.content)) {
+    return "";
+  }
+
+  return message.content
+    .filter((block) => block?.type === "text")
+    .map((block) => block.text)
+    .join("\n")
+    .trim();
+}
+
+async function sendSuggestedReplies({
+  claudeService,
+  stream,
+  userMessage,
+  assistantMessage,
+  suggestionsEnabled,
+}) {
+  if (!suggestionsEnabled || !assistantMessage) {
+    return;
+  }
+
+  try {
+    const suggestions = await claudeService.generateSuggestedReplies({
+      userMessage,
+      assistantMessage,
+    });
+
+    if (suggestions.length > 0) {
+      stream.sendMessage({
+        type: "suggestions",
+        suggestions,
+      });
+    }
+  } catch (error) {
+    console.error("Error generating suggested replies:", error);
+  }
 }
 
 /**

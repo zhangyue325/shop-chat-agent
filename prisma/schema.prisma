@@ -91,8 +91,8 @@ model ChatSettings {
   humanAssistantUrl   String    @default("")
   supportTeamHtml     String    @default("")
   suggestionsEnabled  Boolean   @default(true)
-  suggestionChipsJson String    @default("[\"Show me best sellers\",\"Recommend something for me\",\"What promotions are available?\"]")
-  suggestionRulesJson String    @default("[{\"keywords\":[\"cart\",\"checkout\"],\"chips\":[\"Show me my cart\",\"How do I check out?\"]},{\"keywords\":[\"shipping\",\"delivery\"],\"chips\":[\"What are the shipping options?\",\"How long does delivery take?\"]},{\"keywords\":[\"return\",\"refund\",\"exchange\"],\"chips\":[\"What is the return policy?\",\"How do I start an exchange?\"]},{\"keywords\":[\"size\",\"fit\"],\"chips\":[\"What size should I choose?\",\"Can you compare the sizes?\"]},{\"keywords\":[\"product\",\"recommend\",\"best seller\",\"collection\"],\"chips\":[\"Show me best sellers\",\"Recommend something similar\",\"What is new this season?\"]}]")
+  suggestionChipsJson String    @default("[]")
+  suggestionRulesJson String    @default("[]")
   welcomeProductsJson String
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt

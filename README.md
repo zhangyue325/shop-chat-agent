@@ -55,3 +55,4 @@ Coming soon...
 - Smarter product cards (do not display irrelant products)
 - migrate ephemeral database from sqlite in GCP to permanant database (maybe in subapase)
 - Dashboard for the AI agent (agent sessions, session topic, CR, CVR, and so on)
+- cut the input token by optimising historical conversation to AI, Every turn sends all available MCP tool schemas into Claude

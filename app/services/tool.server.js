@@ -5,6 +5,9 @@
 import { saveMessage } from "../db.server";
 import AppConfig from "./config.server";
 
+const MAX_CATALOG_PRODUCTS_IN_HISTORY = 10;
+const MAX_CATALOG_DESCRIPTION_LENGTH = 220;
+
 /**
  * Creates a tool service instance
  * @returns {Object} Tool service with methods for managing tools
@@ -75,14 +78,17 @@ export function createToolService() {
    * @param {string} conversationId - The conversation ID
    */
   const handleToolSuccess = async (toolUseResponse, toolName, toolUseId, conversationHistory, productState, conversationId) => {
+    let toolResultContent = toolUseResponse.content;
+
     // Check if this is a product search result
     if (toolName === AppConfig.tools.productSearchName) {
       const latestProducts = processProductSearchResult(toolUseResponse);
       productState.candidates.splice(0, productState.candidates.length, ...latestProducts);
       productState.selected.splice(0, productState.selected.length);
+      toolResultContent = compactProductSearchResult(latestProducts);
     }
 
-    addToolResultToHistory(conversationHistory, toolUseId, toolUseResponse.content, conversationId);
+    addToolResultToHistory(conversationHistory, toolUseId, toolResultContent, conversationId);
   };
 
   /**
@@ -186,6 +192,37 @@ export function createToolService() {
       description,
       url: product.url || ''
     };
+  };
+
+  const compactProductSearchResult = (products = []) => {
+    return JSON.stringify({
+      products: products
+        .slice(0, MAX_CATALOG_PRODUCTS_IN_HISTORY)
+        .map((product) => ({
+          id: product.id,
+          title: product.title,
+          price: product.price,
+          url: product.url,
+          image_url: product.image_url,
+          description: truncateText(stripHtml(product.description), MAX_CATALOG_DESCRIPTION_LENGTH)
+        })),
+      result_count: products.length,
+      note: "Compacted search_catalog result. Use exact product ids when calling display_product_cards."
+    });
+  };
+
+  const stripHtml = (value = '') => {
+    return String(value).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  };
+
+  const truncateText = (value = '', maxLength) => {
+    const text = String(value).trim();
+
+    if (text.length <= maxLength) {
+      return text;
+    }
+
+    return `${text.slice(0, maxLength).trim()}...`;
   };
 
   /**

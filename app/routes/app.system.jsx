@@ -28,8 +28,6 @@ export const action = async ({ request }) => {
     humanAssistantUrl: settings.humanAssistantUrl,
     supportTeamHtml: settings.supportTeamHtml,
     suggestionsEnabled: settings.suggestionsEnabled,
-    suggestionChips: settings.suggestionChips,
-    suggestionRules: settings.suggestionRules,
     welcomeProducts: settings.welcomeProducts,
   });
 

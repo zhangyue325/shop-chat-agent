@@ -416,10 +416,9 @@
        * @param {string} text - Message content
        * @param {string} sender - Message sender ('user' or 'assistant')
        * @param {HTMLElement} messagesContainer - The messages container
-       * @param {boolean} showSuggestions - Whether to show suggested replies
        * @returns {HTMLElement} The created message element
        */
-      add: function(text, sender, messagesContainer, showSuggestions = sender === 'assistant') {
+      add: function(text, sender, messagesContainer) {
         const messageElement = document.createElement('div');
         messageElement.classList.add('shop-ai-message', sender);
 
@@ -431,9 +430,6 @@
         }
 
         messagesContainer.appendChild(messageElement);
-        if (sender === 'assistant' && showSuggestions) {
-          this.addSuggestions(text, messagesContainer);
-        }
         ShopAIChat.UI.scrollToBottom();
 
         return messageElement;
@@ -452,12 +448,14 @@
        * @param {string} assistantText - Assistant response text
        * @param {HTMLElement} messagesContainer - The messages container
        */
-      addSuggestions: function(assistantText, messagesContainer) {
+      addSuggestions: function(messagesContainer, suggestedReplies) {
         if (window.shopChatConfig?.suggestionsEnabled === false) return;
 
         this.removeSuggestions(messagesContainer);
 
-        const suggestions = this.generateSuggestions(assistantText);
+        const suggestions = Array.isArray(suggestedReplies) && suggestedReplies.length > 0
+          ? this.normalizeSuggestions(suggestedReplies)
+          : [];
         if (suggestions.length === 0) return;
 
         const suggestionsElement = document.createElement('div');
@@ -482,48 +480,22 @@
       },
 
       /**
-       * Generate 1-3 likely next questions from an assistant response.
-       * @param {string} assistantText - Assistant response text
-       * @returns {Array<string>} Suggested questions
+       * Normalize suggested reply chip labels.
+       * @param {Array<string>} suggestions - Suggested replies
+       * @returns {Array<string>} Normalized suggestions
        */
-      generateSuggestions: function(assistantText) {
-        const text = (assistantText || '').toLowerCase();
-        const suggestions = [];
+      normalizeSuggestions: function(suggestions) {
+        const normalized = [];
 
-        const add = (suggestion) => {
-          if (suggestions.length < 3 && !suggestions.includes(suggestion)) {
-            suggestions.push(suggestion);
-          }
-        };
+        suggestions.forEach(suggestion => {
+          const value = String(suggestion || '').trim().slice(0, 20);
 
-        const suggestionRules = Array.isArray(window.shopChatConfig?.suggestionRules)
-          ? window.shopChatConfig.suggestionRules
-          : [];
-
-        suggestionRules.forEach(rule => {
-          const keywords = Array.isArray(rule.keywords) ? rule.keywords : [];
-          const chips = Array.isArray(rule.chips) ? rule.chips : [];
-          const isMatch = keywords.some(keyword => keyword && text.includes(keyword.toLowerCase()));
-
-          if (isMatch) {
-            chips.forEach(add);
+          if (value && !normalized.includes(value) && normalized.length < 3) {
+            normalized.push(value);
           }
         });
 
-        const fallbackSuggestions = Array.isArray(window.shopChatConfig?.suggestionChips) &&
-          window.shopChatConfig.suggestionChips.length > 0
-          ? window.shopChatConfig.suggestionChips
-          : [
-              'Show me best sellers',
-              'Recommend something for me',
-              'What promotions are available?'
-            ];
-
-        if (text.includes('interested in') || suggestions.length === 0) {
-          fallbackSuggestions.forEach(add);
-        }
-
-        return suggestions;
+        return normalized;
       },
 
       /**
@@ -659,7 +631,7 @@
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i];
           const unorderedMatch = line.match(/^\s*([-*])\s+(.*)/);
-          const orderedMatch = line.match(/^\s*(\d+)[\.)]\s+(.*)/);
+          const orderedMatch = line.match(/^\s*(\d+)[.)]\s+(.*)/);
 
           if (unorderedMatch) {
             if (currentList !== 'ul') {
@@ -757,12 +729,6 @@
             suggestionsEnabled: typeof settings.suggestionsEnabled === 'boolean'
               ? settings.suggestionsEnabled
               : config.suggestionsEnabled,
-            suggestionChips: Array.isArray(settings.suggestionChips) && settings.suggestionChips.length > 0
-              ? settings.suggestionChips
-              : config.suggestionChips,
-            suggestionRules: Array.isArray(settings.suggestionRules) && settings.suggestionRules.length > 0
-              ? settings.suggestionRules
-              : config.suggestionRules,
             welcomeProducts: Array.isArray(settings.welcomeProducts) && settings.welcomeProducts.length > 0
               ? settings.welcomeProducts
               : config.welcomeProducts || ShopAIChat.Product.welcomeProducts
@@ -824,9 +790,13 @@
           currentMessageElement = messageElement;
 
           // Process the stream
-          while (true) {
+          let isReadingStream = true;
+          while (isReadingStream) {
             const { value, done } = await reader.read();
-            if (done) break;
+            if (done) {
+              isReadingStream = false;
+              break;
+            }
 
             buffer += decoder.decode(value, { stream: true });
             const lines = buffer.split('\n\n');
@@ -837,7 +807,9 @@
                 try {
                   const data = JSON.parse(line.slice(6));
                   this.handleStreamEvent(data, currentMessageElement, messagesContainer, userMessage,
-                    (newElement) => { currentMessageElement = newElement; });
+                    (newElement) => {
+                      currentMessageElement = newElement;
+                    });
                 } catch (e) {
                   console.error('Error parsing event data:', e, line);
                 }
@@ -878,7 +850,6 @@
           case 'message_complete':
             ShopAIChat.UI.removeTypingIndicator();
             ShopAIChat.Formatting.formatMessageContent(currentMessageElement);
-            ShopAIChat.Message.addSuggestions(currentMessageElement.dataset.rawText, messagesContainer);
             ShopAIChat.UI.scrollToBottom();
             break;
 
@@ -886,12 +857,18 @@
             ShopAIChat.UI.removeTypingIndicator();
             break;
 
+          case 'suggestions':
+            if (Array.isArray(data.suggestions) && data.suggestions.length > 0) {
+              ShopAIChat.Message.addSuggestions(messagesContainer, data.suggestions);
+              ShopAIChat.UI.scrollToBottom();
+            }
+            break;
+
           case 'error':
             console.error('Stream error:', data.error);
             ShopAIChat.UI.removeTypingIndicator();
             currentMessageElement.textContent = "Sorry, I couldn't process your request. Please try again later.";
             currentMessageElement.dataset.rawText = currentMessageElement.textContent;
-            ShopAIChat.Message.addSuggestions(currentMessageElement.dataset.rawText, messagesContainer);
             break;
 
           case '429_rate_limit_exceeded':
@@ -899,7 +876,6 @@
             ShopAIChat.UI.removeTypingIndicator();
             currentMessageElement.textContent = "Sorry, our AI agent server has reached its limit. You can reach out to our support team with [WhatsApp](https://api.whatsapp.com/send/?phone=6588526280) for assistance.";
             currentMessageElement.dataset.rawText = currentMessageElement.textContent;
-            ShopAIChat.Message.addSuggestions(currentMessageElement.dataset.rawText, messagesContainer);
             break;
 
           case '529_rate_limit_exceeded':
@@ -907,7 +883,6 @@
             ShopAIChat.UI.removeTypingIndicator();
             currentMessageElement.textContent = "Sorry, Service overloaded (529). Please try again later.";
             currentMessageElement.dataset.rawText = currentMessageElement.textContent;
-            ShopAIChat.Message.addSuggestions(currentMessageElement.dataset.rawText, messagesContainer);
             break;
 
           case 'auth_required':
@@ -926,7 +901,7 @@
           //   }
           //   break;
 
-          case 'new_message':
+          case 'new_message': {
             ShopAIChat.Message.removeSuggestions(messagesContainer);
             ShopAIChat.Formatting.formatMessageContent(currentMessageElement);
             ShopAIChat.UI.showTypingIndicator();
@@ -941,6 +916,7 @@
             // Update the current element reference
             updateCurrentElement(newMessageElement);
             break;
+          }
 
           case 'content_block_complete':
             ShopAIChat.UI.showTypingIndicator();
@@ -1009,11 +985,11 @@
               const messageContents = JSON.parse(message.content);
               for (const contentBlock of messageContents) {
                 if (contentBlock.type === 'text') {
-                  ShopAIChat.Message.add(contentBlock.text, message.role, messagesContainer, false);
+                  ShopAIChat.Message.add(contentBlock.text, message.role, messagesContainer);
                 }
               }
             } catch (e) {
-              ShopAIChat.Message.add(message.content, message.role, messagesContainer, false);
+              ShopAIChat.Message.add(message.content, message.role, messagesContainer);
             }
           });
 
