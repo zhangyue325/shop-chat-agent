@@ -35,9 +35,7 @@ export const defaultProductOffering = "PAZZION offers a collection of genuine le
 export const defaultHumanAssistantUrl = "";
 export const defaultSupportTeamHtml = '<p>You can contact us via <a href="https://api.whatsapp.com/send/?phone=6588526280">WhatsApp</a> or drop an email to <a href="customercare@pazzion.com">customercare@pazzion.com</a>. We\'ll respond as soon as possible.</p>';
 export const defaultSuggestionsEnabled = true;
-export const defaultSuggestionChips = [
-  ""
-];
+export const defaultSuggestionChips = [];
 
 export const defaultSuggestionRules = [
   {
