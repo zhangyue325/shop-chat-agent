@@ -1,58 +1,114 @@
-# Why this Project
-The [official Shopify template app](https://github.com/Shopify/shop-chat-agent) in the [documentation](https://shopify.dev/docs/apps/build/storefront-mcp/build-storefront-ai-agent?framework=reactRouter) for using Shopify Storefront MCP is buggy and offers limited functionality. 
+# Shop Chat Agent
 
-To address these issues, I built this project to make it easier to use Shopify Storefront MCP to build your Shopify AI agent assistant, while providing a more reliable experience and a richer set of new features.
+Shop Chat Agent is a Shopify AI assistant app built with React Router, Shopify Storefront MCP, Claude, and a storefront chat bubble extension.
 
-Some of features referred from [Clarity Brand Agent](https://clarity.microsoft.com/brand-agents).
+The project started from Shopify's Storefront MCP assistant example, but extends it with a more usable merchant admin, welcome products, configurable prompts, support content, greeting chips, suggested replies, and storefront chat UI controls.
 
+## Why This Project
 
-# New Features
-- Welcome products
-- Suggested reply chips under assistant response
-- Non-technical persons can control how the AI assistant works 
+The official Shopify Storefront MCP template is useful as a starting point, but it is limited for a real storefront assistant. This project focuses on making the assistant easier to configure and more practical for non-technical store operators.
 
-# Demo
-You can find the app demo in this [demo store](https://shop-chat-agent-dev-store.myshopify.com/). Its store password is `123`.
+Some feature ideas are inspired by [Clarity Brand Agent](https://clarity.microsoft.com/brand-agents).
 
-# How to Use It (local host)
+## Features
 
-1. Installation
+- Storefront chat bubble powered by Claude and Shopify Storefront MCP.
+- Merchant-configurable greeting message.
+- Greeting reply chips shown under the initial welcome message.
+- Welcome product cards shown when a shopper opens the chat.
+- AI-generated suggested reply chips after assistant responses.
+- Configurable system prompt, brand description, and product offering.
+- Configurable support team HTML content.
+- Configurable chat bubble position and offsets.
+- Product card display support through MCP catalog search results.
+- Conversation history support.
 
-    1.1. Clone the repository
-    ```
-    git clone https://github.com/zhangyue325/shop-chat-agent.git
-    cd shop-chat-agent
-    ```
-    1.2. Install dependencies
-    ```
-    npm install
-    ```
-    1.3. Set up environment variables
+## Admin Sections
 
-    Rename the .env.example file to .env and make sure it has your Claude API key:
-    ```
-    CLAUDE_API_KEY=your_claude_api_key
-    ```
+- **Greetings**: edit the welcome message, default greeting chips, and welcome product cards.
+- **System**: edit assistant behavior, brand context, product context, and the global suggested reply chip toggle.
+- **Support Team**: edit the support information shown in the chat support tab.
+- **Appearance**: edit the chat bubble position and spacing.
 
-2. Create your app
+## Demo
 
-    2.1. Install the latest Shopify CLI
-    ```
-    npm install -g @shopify/cli@latest
-    ```
-    2.2. Start the development server
-    ```
-    shopify app dev --use-localhost --reset
-    ```
-You can find the details (including MCP capabilities, basic test cases) of Shopify MCP in [Shopify's documentation](https://shopify.dev/docs/apps/build/storefront-mcp).
+Demo store: [shop-chat-agent-dev-store.myshopify.com](https://shop-chat-agent-dev-store.myshopify.com/)
 
-# How to Use It (GCP Run host)
-Coming soon...
+Store password: `123`
 
-# Features To Be Developed
-- ~~suggested reply chips (completed)~~
-- Smarter suggested reply chips
-- Smarter product cards (do not display irrelant products)
-- migrate ephemeral database from sqlite in GCP to permanant database (maybe in subapase)
-- Dashboard for the AI agent (agent sessions, session topic, CR, CVR, and so on)
-- cut the input token by optimising historical conversation to AI, Every turn sends all available MCP tool schemas into Claude
+## Local Development
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/zhangyue325/shop-chat-agent.git
+cd shop-chat-agent
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Configure environment variables
+
+Create a `.env` file from `.env.example` and set your Claude API key:
+
+```bash
+CLAUDE_API_KEY=your_claude_api_key
+```
+
+### 4. Start Shopify app development
+
+Install or update Shopify CLI if needed:
+
+```bash
+npm install -g @shopify/cli@latest
+```
+
+Start the app:
+
+```bash
+shopify app dev --use-localhost --reset
+```
+
+Shopify Storefront MCP documentation: [shopify.dev/docs/apps/build/storefront-mcp](https://shopify.dev/docs/apps/build/storefront-mcp)
+
+## Useful Scripts
+
+```bash
+npm run dev          # Start Shopify app development
+npm run build        # Build the React Router app
+npm run start        # Serve the built app
+npm run typecheck    # Generate route types and run TypeScript checks
+npm run lint         # Run ESLint
+npm run setup        # Generate Prisma client and deploy migrations
+```
+
+## Database
+
+The app uses Prisma for persistence. Chat settings are stored in the `ChatSettings` model, including:
+
+- System prompt and brand/product context.
+- Greeting message.
+- Greeting chips.
+- Suggested reply chip toggle.
+- Welcome products.
+- Support team content.
+- Bubble appearance settings.
+
+Run migrations in deployed environments with:
+
+```bash
+npm run setup
+```
+
+## Roadmap
+
+- Smarter suggested reply chips.
+- Smarter product cards with stricter relevance filtering.
+- Production database migration from ephemeral SQLite to a managed persistent database.
+- Agent analytics dashboard for sessions, topics, conversion rate, and related metrics.
+- Token usage optimization for conversation history and MCP tool schema payloads.
+
