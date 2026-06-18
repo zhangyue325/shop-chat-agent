@@ -93,7 +93,8 @@ export function createClaudeService(apiKey = process.env.CLAUDE_API_KEY) {
         "Your suggestions must comes from the AI response. Do not include any new suggestions that are not relevant to the AI response.",
         "Do not include markdown, explanations, numbering, or extra keys.",
         "You can generate 0~3 suggested replies if possible in normal cases.",
-        "but if the AI response was asking customer's shoes size (for example: what size would you like?), your suggestions can have 8 (including 34, 35, 36, 37, 38, 39, 40, 41)."
+        "If the AI response was asking customer's shoes size (for example: what size would you like?), your suggestions can have 8 (including 34, 35, 36, 37, 38, 39, 40, 41).",
+        "If the AI response was asking customer to checkout with an checkout link, you should not return any suggestions.",
       ].join("\n"),
       messages: [
         {

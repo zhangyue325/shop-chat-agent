@@ -44,6 +44,11 @@ export const defaultBrandDescription = "PAZZION is a Singapore-born women's foot
 export const defaultProductOffering = "PAZZION offers a collection of genuine leather shoes and bags, expertly crafted for the modern individual. Their products, including heels, loafers, flats, and sandals, blend stylish design with everyday comfort. With a focus on quality craftsmanship, PAZZION provides sophisticated footwear and accessories perfect for both work and leisure.";
 export const defaultSupportTeamHtml = '<p>You can contact us via <a href="https://api.whatsapp.com/send/?phone=6588526280">WhatsApp</a> or drop an email to <a href="customercare@pazzion.com">customercare@pazzion.com</a>. We\'ll respond as soon as possible.</p>';
 export const defaultSuggestionsEnabled = true;
+export const defaultSuggestionChips = [
+  "Show best sellers",
+  "Recommend shoes",
+  "Recommend bags",
+];
 export const defaultBubbleAppearance = {
   position: "right",
   bottomPx: 20,
@@ -99,6 +104,36 @@ export function parseWelcomeProducts(productsJson) {
   }
 
   return defaultWelcomeProducts;
+}
+
+export function normalizeSuggestionChips(chips = []) {
+  const normalized = [];
+
+  if (!Array.isArray(chips)) {
+    return normalized;
+  }
+
+  chips.forEach((chip) => {
+    const value = String(chip || "").trim().slice(0, 20);
+
+    if (value && !normalized.includes(value) && normalized.length < 8) {
+      normalized.push(value);
+    }
+  });
+
+  return normalized;
+}
+
+export function parseSuggestionChips(chipsJson) {
+  try {
+    const chips = JSON.parse(chipsJson);
+
+    return normalizeSuggestionChips(chips);
+  } catch (error) {
+    console.error("Error parsing suggestion chips:", error);
+  }
+
+  return defaultSuggestionChips;
 }
 
 export function composeSystemPrompt({ basePrompt, brandDescription, productOffering }) {
@@ -196,6 +231,9 @@ export function formatChatSettings(settings) {
     humanAssistantUrl: normalizeHumanAssistantUrl(settings?.humanAssistantUrl),
     supportTeamHtml: normalizeSupportTeamHtml(settings?.supportTeamHtml),
     suggestionsEnabled,
+    suggestionChips: settings?.suggestionChipsJson
+      ? parseSuggestionChips(settings.suggestionChipsJson)
+      : defaultSuggestionChips,
     bubblePosition: bubbleAppearance.position,
     bubbleBottomPx: bubbleAppearance.bottomPx,
     bubbleLeftPx: bubbleAppearance.leftPx,
@@ -229,6 +267,7 @@ export async function getChatSettings(shop) {
         "humanAssistantUrl",
         "supportTeamHtml",
         "suggestionsEnabled",
+        "suggestionChipsJson",
         "bubblePosition",
         "bubbleBottomPx",
         "bubbleLeftPx",
@@ -256,6 +295,8 @@ export async function saveChatSettings(shop, settings) {
     typeof settings.suggestionsEnabled === "boolean"
       ? settings.suggestionsEnabled
       : defaultSuggestionsEnabled;
+  const suggestionChips = normalizeSuggestionChips(settings.suggestionChips);
+  const suggestionChipsJson = JSON.stringify(suggestionChips);
   const bubbleAppearance = normalizeBubbleAppearance(settings);
   const welcomeProducts = normalizeWelcomeProducts(settings.welcomeProducts);
   const welcomeProductsJson = JSON.stringify(welcomeProducts);
@@ -272,6 +313,7 @@ export async function saveChatSettings(shop, settings) {
         humanAssistantUrl,
         supportTeamHtml,
         suggestionsEnabled,
+        suggestionChipsJson,
         bubblePosition: bubbleAppearance.position,
         bubbleBottomPx: bubbleAppearance.bottomPx,
         bubbleLeftPx: bubbleAppearance.leftPx,
@@ -286,6 +328,7 @@ export async function saveChatSettings(shop, settings) {
         humanAssistantUrl,
         supportTeamHtml,
         suggestionsEnabled,
+        suggestionChipsJson,
         bubblePosition: bubbleAppearance.position,
         bubbleBottomPx: bubbleAppearance.bottomPx,
         bubbleLeftPx: bubbleAppearance.leftPx,
@@ -306,6 +349,7 @@ export async function saveChatSettings(shop, settings) {
       "humanAssistantUrl",
       "supportTeamHtml",
       "suggestionsEnabled",
+      "suggestionChipsJson",
       "bubblePosition",
       "bubbleBottomPx",
       "bubbleLeftPx",
@@ -324,6 +368,7 @@ export async function saveChatSettings(shop, settings) {
       ${humanAssistantUrl},
       ${supportTeamHtml},
       ${suggestionsEnabled},
+      ${suggestionChipsJson},
       ${bubbleAppearance.position},
       ${bubbleAppearance.bottomPx},
       ${bubbleAppearance.leftPx},
@@ -340,6 +385,7 @@ export async function saveChatSettings(shop, settings) {
       "humanAssistantUrl" = excluded."humanAssistantUrl",
       "supportTeamHtml" = excluded."supportTeamHtml",
       "suggestionsEnabled" = excluded."suggestionsEnabled",
+      "suggestionChipsJson" = excluded."suggestionChipsJson",
       "bubblePosition" = excluded."bubblePosition",
       "bubbleBottomPx" = excluded."bubbleBottomPx",
       "bubbleLeftPx" = excluded."bubbleLeftPx",

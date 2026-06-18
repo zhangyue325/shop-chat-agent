@@ -29,6 +29,9 @@ export const action = async ({ request }) => {
     image_url: formData.get(`productImage-${index}`)?.toString() || "",
     url: formData.get(`productUrl-${index}`)?.toString() || "",
   }));
+  const suggestionChips = Array.from({ length: 8 }, (_, index) =>
+    formData.get(`suggestionChip-${index}`)?.toString() || "",
+  );
 
   await saveChatSettings(session.shop, {
     systemPrompt: settings.baseSystemPrompt,
@@ -38,6 +41,7 @@ export const action = async ({ request }) => {
     humanAssistantUrl: settings.humanAssistantUrl,
     supportTeamHtml: settings.supportTeamHtml,
     suggestionsEnabled: settings.suggestionsEnabled,
+    suggestionChips,
     bubblePosition: settings.bubblePosition,
     bubbleBottomPx: settings.bubbleBottomPx,
     bubbleLeftPx: settings.bubbleLeftPx,
@@ -63,7 +67,7 @@ export default function Greetings() {
         <div className="settings-shell">
           <div className="intro">
             <h1>Greetings</h1>
-            <p>Control the first message shoppers see and the product cards shown below it.</p>
+            <p>Control the first message shoppers see, greeting chips, and the product cards shown below it.</p>
           </div>
 
           <Form method="post" className="panel">
@@ -75,6 +79,23 @@ export default function Greetings() {
                 rows={3}
                 defaultValue={settings.welcomeMessage}
               />
+            </div>
+
+            <div className="chip-editor">
+              <h2>Greeting chips</h2>
+              <div className="field-grid">
+                {Array.from({ length: 8 }, (_, index) => (
+                  <div className="field" key={`suggestionChip-${index}`}>
+                    <label htmlFor={`suggestionChip-${index}`}>Chip {index + 1}</label>
+                    <input
+                      id={`suggestionChip-${index}`}
+                      name={`suggestionChip-${index}`}
+                      maxLength={20}
+                      defaultValue={settings.suggestionChips[index] || ""}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="product-editor">
@@ -208,11 +229,13 @@ const sharedStyles = `
     resize: vertical;
   }
 
+  .chip-editor,
   .product-editor {
     display: grid;
     gap: 12px;
   }
 
+  .chip-editor h2,
   .product-editor h2 {
     margin: 0;
     font-size: 17px;

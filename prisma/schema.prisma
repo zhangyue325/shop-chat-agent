@@ -91,7 +91,7 @@ model ChatSettings {
   humanAssistantUrl   String    @default("")
   supportTeamHtml     String    @default("")
   suggestionsEnabled  Boolean   @default(true)
-  suggestionChipsJson String    @default("[]")
+  suggestionChipsJson String    @default("[\"Show best sellers\",\"New arrivals\",\"Recommend shoes\",\"Recommend bags\"]")
   suggestionRulesJson String    @default("[]")
   bubblePosition      String    @default("right")
   bubbleBottomPx      Int       @default(20)

@@ -19,6 +19,7 @@ export const action = async ({ request }) => {
   const systemPrompt = formData.get("systemPrompt")?.toString();
   const brandDescription = formData.get("brandDescription")?.toString();
   const productOffering = formData.get("productOffering")?.toString();
+  const suggestionsEnabled = formData.get("suggestionsEnabled") === "on";
 
   await saveChatSettings(session.shop, {
     systemPrompt,
@@ -27,7 +28,8 @@ export const action = async ({ request }) => {
     welcomeMessage: settings.welcomeMessage,
     humanAssistantUrl: settings.humanAssistantUrl,
     supportTeamHtml: settings.supportTeamHtml,
-    suggestionsEnabled: settings.suggestionsEnabled,
+    suggestionsEnabled,
+    suggestionChips: settings.suggestionChips,
     bubblePosition: settings.bubblePosition,
     bubbleBottomPx: settings.bubbleBottomPx,
     bubbleLeftPx: settings.bubbleLeftPx,
@@ -84,6 +86,16 @@ export default function System() {
                 rows={5}
                 defaultValue={settings.productOffering}
               />
+            </div>
+
+            <div className="checkbox-field">
+              <input
+                id="suggestionsEnabled"
+                type="checkbox"
+                name="suggestionsEnabled"
+                defaultChecked={settings.suggestionsEnabled}
+              />
+              <label htmlFor="suggestionsEnabled">Show AI-generated reply chips</label>
             </div>
 
             <div className="actions">
@@ -164,6 +176,15 @@ export default function System() {
 
         .field textarea {
           resize: vertical;
+        }
+
+        .checkbox-field {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          color: #303030;
+          font-size: 14px;
+          font-weight: 650;
         }
 
         .actions {

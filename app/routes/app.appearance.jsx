@@ -32,6 +32,7 @@ export const action = async ({ request }) => {
     humanAssistantUrl: settings.humanAssistantUrl,
     supportTeamHtml: settings.supportTeamHtml,
     suggestionsEnabled: settings.suggestionsEnabled,
+    suggestionChips: settings.suggestionChips,
     bubblePosition: bubbleAppearance.position,
     bubbleBottomPx: bubbleAppearance.bottomPx,
     bubbleLeftPx: bubbleAppearance.leftPx,

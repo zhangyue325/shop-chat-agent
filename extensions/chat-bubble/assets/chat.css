@@ -73,14 +73,14 @@
   .shop-ai-chat-window {
     position: absolute;
     z-index: 2;
-    bottom: 80px;
+    bottom: 0;
     right: 0;
-    width: 90vw;
-    max-width: 450px;
-    height: 70vh;
-    height: calc(var(--viewport-height, 100vh) * 0.7);
-    max-height: 650px;
-    min-height: 350px;
+    width: min(94vw, 520px);
+    max-width: 520px;
+    height: 78vh;
+    height: calc(var(--viewport-height, 100vh) * 0.78);
+    max-height: 760px;
+    min-height: 380px;
     background-color: white;
     border-radius: 16px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);

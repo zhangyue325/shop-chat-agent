@@ -26,6 +26,7 @@ export const action = async ({ request }) => {
     humanAssistantUrl: settings.humanAssistantUrl,
     supportTeamHtml,
     suggestionsEnabled: settings.suggestionsEnabled,
+    suggestionChips: settings.suggestionChips,
     bubblePosition: settings.bubblePosition,
     bubbleBottomPx: settings.bubbleBottomPx,
     bubbleLeftPx: settings.bubbleLeftPx,

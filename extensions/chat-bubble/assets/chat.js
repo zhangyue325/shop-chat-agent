@@ -464,7 +464,7 @@
         suggestions.forEach(suggestion => {
           const value = String(suggestion || '').trim().slice(0, 20);
 
-          if (value && !normalized.includes(value) && normalized.length < 3) {
+          if (value && !normalized.includes(value) && normalized.length < 8) {
             normalized.push(value);
           }
         });
@@ -703,6 +703,9 @@
             suggestionsEnabled: typeof settings.suggestionsEnabled === 'boolean'
               ? settings.suggestionsEnabled
               : config.suggestionsEnabled,
+            suggestionChips: Array.isArray(settings.suggestionChips)
+              ? settings.suggestionChips
+              : config.suggestionChips,
             bubblePosition: settings.bubblePosition || config.bubblePosition,
             bubbleBottomPx: Number.isFinite(Number(settings.bubbleBottomPx))
               ? settings.bubbleBottomPx
@@ -957,9 +960,7 @@
 
           // No messages, show welcome message
           if (!data.messages || data.messages.length === 0) {
-            const welcomeMessage = window.shopChatConfig?.welcomeMessage || "Ask me anything you are interested in.";
-            ShopAIChat.Message.add(welcomeMessage, 'assistant', messagesContainer);
-            ShopAIChat.Product.showWelcomeProducts();
+            ShopAIChat.showWelcomeState(messagesContainer);
             return;
           }
 
@@ -990,9 +991,7 @@
           }
 
           // Show error and welcome message
-          const welcomeMessage = window.shopChatConfig?.welcomeMessage || "Ask me anything you are interested in.";
-          ShopAIChat.Message.add(welcomeMessage, 'assistant', messagesContainer);
-          ShopAIChat.Product.showWelcomeProducts();
+          ShopAIChat.showWelcomeState(messagesContainer);
 
           // Clear the conversation ID since we couldn't fetch this conversation
           sessionStorage.removeItem('shopAiConversationId');
@@ -1276,7 +1275,9 @@
      */
     showWelcomeState: function(messagesContainer) {
       const welcomeMessage = window.shopChatConfig?.welcomeMessage || "Ask me anything you are interested in.";
+      const suggestionChips = window.shopChatConfig?.suggestionChips || [];
       this.Message.add(welcomeMessage, 'assistant', messagesContainer);
+      this.Message.addSuggestions(messagesContainer, suggestionChips);
       this.Product.showWelcomeProducts();
     },
 
