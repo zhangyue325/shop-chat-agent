@@ -1,75 +1,72 @@
 import prisma from "../db.server";
 
 export const defaultWelcomeMessage = "Ask me anything you are interested in.";
-export const defaultSystemPrompt = `You are a helpful store assistant for an e-commerce shop. Answer the customer's questions in a friendly, helpful way about products, shipping, returns, or anything else about the store.
+export const defaultSystemPrompt = `You are a helpful store assistant for an e-commerce shop. Answer the customer's questions in a friendly, helpful way about products discovery and recommendations, answer questions about policies, shipping, returns, and FAQs, and guide customer from product descovery to checkout.
 
-Catalog and cart behavior:
-1. When search_catalog returns products, treat those products as found search results. Do not say you could not find the product unless the products array is empty.
-2. If the customer asks to add a product to cart and search_catalog returns exactly one matching product with exactly one available variant, continue with the available cart tool if one is available.
-3. If search_catalog returns multiple matching products or variants, ask the customer to choose the specific option, such as color or size. Mention the matching product titles.
-4. If no cart tool is available, explain that you found the product and ask the customer to open the product page or choose an option, rather than claiming it was not found.
-
-Formatting guidelines:
-1. When providing cart or checkout links, always format them like this: 'You can [click here to proceed to checkout](URL)' instead of showing the raw URL.
-2. When creating lists, use proper Markdown formatting:
+Product Discovery and Recommendation:
+1. When the customer asks about a product, you should ask for few questions to narrow down the search. for example:
+  - What are your interests? (For example: maryjanes, heels, leather bags, etc.)
+  - What's the occasion? (For example: workwear, casual, wedding, etc.)
+  - Do you have any preferences? (For example: color, style, sustainable, price range, etc.)
+2. Based on the customer's answers, recommend 3-5 products from the catalog that best match their preferences using search_catalog with MCP. 
+3. The recommended products should be displayed as a product list. The list should use proper Markdown formatting:
    - For unordered lists, use dash (-) or asterisk (*) with a single space after it at the beginning of each line
    - For ordered lists, use numbers followed by a period and a space (1. , 2. , etc.)
-3. When comparing options or listing features, always use a clear, structured format with bullet points or numbered lists.
-4. When providing step-by-step instructions, use a numbered list format.
-5. Use **bold text** (with double asterisks) for emphasis on important points or keywords.`;
-export const defaultBrandDescription = "";
-export const defaultProductOffering = "";
+
+Checkout:
+1. When providing cart or checkout links, always format them like this: 'You can [click here to proceed to checkout](URL)' instead of showing the raw URL.
+2. You should never directly ask for customer's personal information such as name, email, or payment details. Instead, guide them to the checkout page where they can securely enter their information.
+
+Policies and FAQs:
+1. When the customer asks about shop policies or FAQs, you should get the answer from search_shop_policies_and_faqs with MCP.
+2. You should answer clear and concise, and provide links to the relevant policy or FAQ page if available.
+ - FAQ: [FAQ](https://www.pazzion.com/pages/faq)
+ - Returns, Exchanges & Refunds: [Returns, Exchanges & Refunds](https://www.pazzion.com/pages/returns-refunds)
+ - Shipping & delivery: [Shipping & Delivery](https://www.pazzion.com/pages/shipping-delivery)
+3. If you are not confident about the answer, you should ask the customer to contact the support team for further assistance in this page [Contact Support Team](https://www.pazzion.com/pages/contact)
+4. For Policies and FAQs, you should let the customer know that AI-generated answers are for reference only; please refer to the website content for the most accurate information. 
+
+Formatting guidelines:
+1. When comparing options or listing features, always use a clear, structured format with bullet points or numbered lists.
+2. When providing step-by-step instructions, use a numbered list format.
+3. Use **bold text** (with double asterisks) for emphasis on important points or keywords.`;
+export const defaultBrandDescription = "PAZZION is a Singapore-born women's footwear and lifestyle brand best known for comfortable, polished shoes made mainly with genuine leather. It was founded in Singapore in 2002 and has built its identity around “quality, comfort, and understated design” for everyday wear";
+export const defaultProductOffering = "PAZZION offers a collection of genuine leather shoes and bags, expertly crafted for the modern individual. Their products, including heels, loafers, flats, and sandals, blend stylish design with everyday comfort. With a focus on quality craftsmanship, PAZZION provides sophisticated footwear and accessories perfect for both work and leisure.";
 export const defaultHumanAssistantUrl = "";
-export const defaultSupportTeamHtml = '<p>You can contact us via <a href="https://api.whatsapp.com/send/?phone=1234567890">WhatsApp</a> or drop an email to <a href="mailto:sample@gmail.com">sample@gmail.com</a>. We\'ll respond as soon as possible.</p>';
+export const defaultSupportTeamHtml = '<p>You can contact us via <a href="https://api.whatsapp.com/send/?phone=6588526280">WhatsApp</a> or drop an email to <a href="customercare@pazzion.com">customercare@pazzion.com</a>. We\'ll respond as soon as possible.</p>';
 export const defaultSuggestionsEnabled = true;
 export const defaultSuggestionChips = [
-  "Recommend something for me",
+  ""
 ];
 
 export const defaultSuggestionRules = [
   {
     keywords: ["cart", "checkout"],
     chips: ["Show me my cart", "Proceed to checkout"],
-  },
-  {
-    keywords: ["shipping", "delivery"],
-    chips: ["What are the shipping options?", "How long does delivery take?"],
-  },
-  {
-    keywords: ["return", "refund", "exchange"],
-    chips: ["What is the return policy?", "How do I start an exchange?"],
-  },
-  {
-    keywords: ["size", "fit"],
-    chips: ["What size should I choose?", "Can you compare the sizes?"],
-  },
-  {
-    keywords: ["product", "recommend", "collection"],
-    chips: ["Recommend something for me"],
-  },
+  }
 ];
 
 export const defaultWelcomeProducts = [
   {
     id: "welcome-product-1",
-    title: "Sample Product 1",
-    price: "$29.00 - $59.00",
-    image_url: "https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-product-1_large.png",
-    url: "",
+    title: "Bella Strappy Heels",
+    price: "$86.00",
+    image_url: "https://cdn.shopify.com/s/files/1/0549/9342/0531/files/BellaStrappyHeels-Blue-1.webp?v=1773304372",
+    url: "https://www.pazzion.com/products/22231-43a-bella-strappy-heels",
   },
   {
     id: "welcome-product-2",
-    title: "Sample Product 2",
-    price: "$89.00",
-    image_url: "https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-product-2_large.png",
-    url: "",
+    title: "Fiorale Orchid Strap Ballet Leather Mary Janes",
+    price: "$96.00",
+    image_url: "https://cdn.shopify.com/s/files/1/0549/9342/0531/files/FioraleOrchidStrapBalletLeatherMaryJanes-Almond-1.webp?v=1775029069",
+    url: "https://www.pazzion.com/products/728-66a-fiorale-orchid-strap-ballet-leather-mary-janes",
   },
   {
     id: "welcome-product-3",
-    title: "Sample Product 3",
-    price: "$69.00",
-    image_url: "https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-product-3_large.png",
-    url: "",
+    title: "Eralisse Leather Bag",
+    price: "$96.00",
+    image_url: "https://cdn.shopify.com/s/files/1/0549/9342/0531/files/EralisseLeatherBag-Beige-1.webp?v=1780973548",
+    url: "https://www.pazzion.com/products/xa2018-eralisse-leather-bag",
   },
 ];
 
