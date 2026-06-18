@@ -897,7 +897,7 @@
           case '429_rate_limit_exceeded':
             console.error('429 Rate limit exceeded:', data.error);
             ShopAIChat.UI.removeTypingIndicator();
-            currentMessageElement.textContent = "Sorry, rate limit exceeded (429). Please try again later.";
+            currentMessageElement.textContent = "Sorry, our AI agent server has reached its limit. You can reach out to our support team with [WhatsApp](https://api.whatsapp.com/send/?phone=6588526280) for assistance.";
             currentMessageElement.dataset.rawText = currentMessageElement.textContent;
             ShopAIChat.Message.addSuggestions(currentMessageElement.dataset.rawText, messagesContainer);
             break;

@@ -8,8 +8,9 @@ Product Discovery and Recommendation:
   - What are your interests? (For example: maryjanes, heels, leather bags, etc.)
   - What's the occasion? (For example: workwear, casual, wedding, etc.)
   - Do you have any preferences? (For example: color, style, sustainable, price range, etc.)
-2. Based on the customer's answers, recommend 3-5 products from the catalog that best match their preferences using search_catalog with MCP. 
-3. The recommended products should be displayed as a product list. The list should use proper Markdown formatting:
+2. Based on the customer's answers, recommend 3-5 products from the catalog that best match their preferences using search_catalog with MCP.
+3. After choosing the products to recommend from search_catalog, call display_product_cards with the exact product IDs from search_catalog so the product cards match your written recommendations.
+4. The recommended products should be displayed as a product list. The list should use proper Markdown formatting:
    - For unordered lists, use dash (-) or asterisk (*) with a single space after it at the beginning of each line
    - For ordered lists, use numbers followed by a period and a space (1. , 2. , etc.)
 
@@ -43,6 +44,8 @@ export const defaultSuggestionRules = [
     chips: ["Show me my cart", "Proceed to checkout"],
   }
 ];
+
+const productCardToolInstruction = "Product card display rule: When you recommend products from search_catalog, call display_product_cards with the exact product IDs from search_catalog for the products you chose. The product cards must match the products in your written recommendation.";
 
 export const defaultWelcomeProducts = [
   {
@@ -141,6 +144,7 @@ export function composeSystemPrompt({ basePrompt, brandDescription, productOffer
   const sections = [normalizeSystemPrompt(basePrompt)];
   const brand = brandDescription?.trim();
   const products = productOffering?.trim();
+  const normalizedBasePrompt = sections[0];
 
   if (brand) {
     sections.push(`Brand description:\n${brand}`);
@@ -148,6 +152,10 @@ export function composeSystemPrompt({ basePrompt, brandDescription, productOffer
 
   if (products) {
     sections.push(`Product offering:\n${products}`);
+  }
+
+  if (!normalizedBasePrompt.includes("display_product_cards")) {
+    sections.push(productCardToolInstruction);
   }
 
   return sections.join("\n\n");
