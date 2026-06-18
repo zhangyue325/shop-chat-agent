@@ -82,59 +82,42 @@ export function createClaudeService(apiKey = process.env.CLAUDE_API_KEY) {
     userMessage,
     assistantMessage
   }) => {
-    const fallbackSuggestions = buildSuggestedReplyFallback({
-      userMessage,
-      assistantMessage
+    const response = await anthropic.messages.create({
+      model: AppConfig.api.defaultModel,
+      max_tokens: 200,
+      temperature: 0.2,
+      system: [
+        "Generate suggested reply chips for an ecommerce chat assistant based on the AI response.",
+        "Return JSON only: an array of exactly 0~8 strings.",
+        "Each string must be very concise customer reply. and must be 25 characters or fewer. If some of your suggestions are longer than 25 characters, just do not include them.",
+        "Your suggestions must comes from the AI response. Do not include any new suggestions that are not relevant to the AI response.",
+        "Do not include markdown, explanations, numbering, or extra keys.",
+        "You can generate 0~3 suggested replies if possible in normal cases.",
+        "but if the AI response was asking customer's shoes size (for example: what size would you like?), your suggestions can have 8 (including 34, 35, 36, 37, 38, 39, 40, 41)."
+      ].join("\n"),
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: [
+                `Customer message:\n${userMessage || ""}`,
+                `Assistant response:\n${assistantMessage || ""}`
+              ].join("\n\n")
+            }
+          ]
+        }
+      ]
     });
 
-    try {
-      const response = await anthropic.messages.create({
-        model: AppConfig.api.defaultModel,
-        max_tokens: 200,
-        temperature: 0.2,
-        system: [
-          "Generate suggested reply chips for an ecommerce chat assistant based on the AI response.",
-          "Return JSON only: an array of exactly 3 strings.",
-          "Each string must be a concise customer reply or question, 20 characters or fewer.",
-          "Use natural customer wording, not assistant-like text.",
-          "Do not include markdown, explanations, numbering, or extra keys."
-        ].join("\n"),
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: [
-                  `Customer message:\n${userMessage || ""}`,
-                  `Assistant response:\n${assistantMessage || ""}`
-                ].join("\n\n")
-              }
-            ]
-          }
-        ]
-      });
+    const text = response.content
+      ?.filter((block) => block.type === "text")
+      .map((block) => block.text)
+      .join("")
+      .trim();
 
-      const text = response.content
-        ?.filter((block) => block.type === "text")
-        .map((block) => block.text)
-        .join("")
-        .trim();
-
-      const suggestions = normalizeSuggestedReplies(text);
-
-      if (suggestions.length > 0) {
-        return suggestions;
-      }
-
-      console.warn("Claude returned no suggested replies, using fallback.", {
-        rawText: text,
-      });
-    } catch (error) {
-      console.error("Error generating suggested replies with Claude:", error);
-    }
-
-    return fallbackSuggestions;
+    return normalizeSuggestedReplies(text);
   };
 
   /**
@@ -161,9 +144,9 @@ function normalizeSuggestedReplies(rawText) {
       return parsed
         .map((suggestion) => String(suggestion || "").trim())
         .filter(Boolean)
-        .map((suggestion) => suggestion.slice(0, 20))
+        .map((suggestion) => suggestion.slice(0, 40)) // tolorate to 40 characters, although AI should return 25 or fewer
         .filter((suggestion, index, suggestions) => suggestions.indexOf(suggestion) === index)
-        .slice(0, 3);
+        .slice(0, 8);
     }
   } catch (error) {
     console.error("Error parsing suggested replies:", error);
@@ -182,36 +165,6 @@ function extractJsonArray(rawText) {
   }
 
   return text;
-}
-
-function buildSuggestedReplyFallback({ userMessage, assistantMessage }) {
-  const context = `${userMessage || ""}\n${assistantMessage || ""}`.toLowerCase();
-
-  if (context.includes("shipping") || context.includes("delivery")) {
-    return ["Shipping options", "Delivery time", "Track my order"];
-  }
-
-  if (context.includes("return") || context.includes("refund") || context.includes("exchange")) {
-    return ["Return policy", "Start a return", "Exchange options"];
-  }
-
-  if (context.includes("size") || context.includes("fit")) {
-    return ["Size guide", "Compare sizes", "Help me choose"];
-  }
-
-  if (
-    context.includes("shoe") ||
-    context.includes("heel") ||
-    context.includes("flat") ||
-    context.includes("sandal") ||
-    context.includes("bag") ||
-    context.includes("collection") ||
-    context.includes("product")
-  ) {
-    return ["Show new arrivals", "Find shoes", "Find bags"];
-  }
-
-  return ["Tell me more", "Show options", "Help me choose"];
 }
 
 export default {

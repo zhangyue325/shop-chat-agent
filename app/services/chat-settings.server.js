@@ -27,6 +27,10 @@ Policies and FAQs:
 3. If you are not confident about the answer, you should ask the customer to contact the support team for further assistance in this page [Contact Support Team](https://www.pazzion.com/pages/contact)
 4. For Policies and FAQs, you should let the customer know that AI-generated answers are for reference only; please refer to the website content for the most accurate information. 
 
+Promotions and Discounts:
+1. You should try to avoid mentioning promotions or discounts unless the customer specifically asks about them. Meanwhile, this MCP cannot get promotions and discounts information from the shopify API"
+2. If the customer asks about promotions or discounts, you should answer that you are not sure about the current promotions or discounts, and suggest the customer to check the shop's website for the latest information or reach our support team contact us via <a href="https://api.whatsapp.com/send/?phone=6588526280">WhatsApp</a>.
+
 Formatting guidelines:
 1. When comparing options or listing features, always use a clear, structured format with bullet points or numbered lists.
 2. When providing step-by-step instructions, use a numbered list format.
@@ -34,13 +38,18 @@ Formatting guidelines:
 
 MCP:
 1. search_catalog
- - the price in the results is minor units. For example, if the price is 86.00, the value in the results will be 8600.
-`;
+ - the price in the results is minor units. For example, if the price is 86.00, the value in the results will be 8600.`;
+
 export const defaultBrandDescription = "PAZZION is a Singapore-born women's footwear and lifestyle brand best known for comfortable, polished shoes made mainly with genuine leather. It was founded in Singapore in 2002 and has built its identity around “quality, comfort, and understated design” for everyday wear";
 export const defaultProductOffering = "PAZZION offers a collection of genuine leather shoes and bags, expertly crafted for the modern individual. Their products, including heels, loafers, flats, and sandals, blend stylish design with everyday comfort. With a focus on quality craftsmanship, PAZZION provides sophisticated footwear and accessories perfect for both work and leisure.";
-export const defaultHumanAssistantUrl = "";
 export const defaultSupportTeamHtml = '<p>You can contact us via <a href="https://api.whatsapp.com/send/?phone=6588526280">WhatsApp</a> or drop an email to <a href="customercare@pazzion.com">customercare@pazzion.com</a>. We\'ll respond as soon as possible.</p>';
 export const defaultSuggestionsEnabled = true;
+export const defaultBubbleAppearance = {
+  position: "right",
+  bottomPx: 20,
+  leftPx: 20,
+  rightPx: 20,
+};
 
 const productCardToolInstruction = "Product card display rule: When you recommend products from search_catalog, call display_product_cards with the exact product IDs from search_catalog for the products you chose. The product cards must match the products in your written recommendation.";
 
@@ -124,11 +133,45 @@ export function normalizeSystemPrompt(systemPrompt) {
 }
 
 export function normalizeHumanAssistantUrl(humanAssistantUrl) {
-  return humanAssistantUrl?.trim() || defaultHumanAssistantUrl;
+  return humanAssistantUrl?.trim() || "";
 }
 
 export function normalizeSupportTeamHtml(supportTeamHtml) {
   return supportTeamHtml?.trim() || defaultSupportTeamHtml;
+}
+
+export function normalizeBubblePosition(position) {
+  return position === "left" ? "left" : "right";
+}
+
+export function normalizeBubbleOffset(value, fallback) {
+  const number = Number.parseInt(value, 10);
+
+  if (!Number.isFinite(number)) {
+    return fallback;
+  }
+
+  return Math.max(0, Math.min(number, 1000));
+}
+
+export function normalizeBubbleAppearance(settings = {}) {
+  const source = settings || {};
+
+  return {
+    position: normalizeBubblePosition(source.bubblePosition),
+    bottomPx: normalizeBubbleOffset(
+      source.bubbleBottomPx,
+      defaultBubbleAppearance.bottomPx,
+    ),
+    leftPx: normalizeBubbleOffset(
+      source.bubbleLeftPx,
+      defaultBubbleAppearance.leftPx,
+    ),
+    rightPx: normalizeBubbleOffset(
+      source.bubbleRightPx,
+      defaultBubbleAppearance.rightPx,
+    ),
+  };
 }
 
 export function formatChatSettings(settings) {
@@ -138,6 +181,7 @@ export function formatChatSettings(settings) {
     typeof settings?.suggestionsEnabled === "boolean"
       ? settings.suggestionsEnabled
       : defaultSuggestionsEnabled;
+  const bubbleAppearance = normalizeBubbleAppearance(settings);
 
   return {
     baseSystemPrompt: normalizeSystemPrompt(settings?.systemPrompt),
@@ -152,6 +196,10 @@ export function formatChatSettings(settings) {
     humanAssistantUrl: normalizeHumanAssistantUrl(settings?.humanAssistantUrl),
     supportTeamHtml: normalizeSupportTeamHtml(settings?.supportTeamHtml),
     suggestionsEnabled,
+    bubblePosition: bubbleAppearance.position,
+    bubbleBottomPx: bubbleAppearance.bottomPx,
+    bubbleLeftPx: bubbleAppearance.leftPx,
+    bubbleRightPx: bubbleAppearance.rightPx,
     welcomeProducts: settings?.welcomeProductsJson
       ? parseWelcomeProducts(settings.welcomeProductsJson)
       : defaultWelcomeProducts,
@@ -181,6 +229,10 @@ export async function getChatSettings(shop) {
         "humanAssistantUrl",
         "supportTeamHtml",
         "suggestionsEnabled",
+        "bubblePosition",
+        "bubbleBottomPx",
+        "bubbleLeftPx",
+        "bubbleRightPx",
         "welcomeProductsJson"
       FROM "ChatSettings"
       WHERE "shop" = ${shop}
@@ -204,6 +256,7 @@ export async function saveChatSettings(shop, settings) {
     typeof settings.suggestionsEnabled === "boolean"
       ? settings.suggestionsEnabled
       : defaultSuggestionsEnabled;
+  const bubbleAppearance = normalizeBubbleAppearance(settings);
   const welcomeProducts = normalizeWelcomeProducts(settings.welcomeProducts);
   const welcomeProductsJson = JSON.stringify(welcomeProducts);
 
@@ -219,6 +272,10 @@ export async function saveChatSettings(shop, settings) {
         humanAssistantUrl,
         supportTeamHtml,
         suggestionsEnabled,
+        bubblePosition: bubbleAppearance.position,
+        bubbleBottomPx: bubbleAppearance.bottomPx,
+        bubbleLeftPx: bubbleAppearance.leftPx,
+        bubbleRightPx: bubbleAppearance.rightPx,
         welcomeProductsJson,
       },
       update: {
@@ -229,6 +286,10 @@ export async function saveChatSettings(shop, settings) {
         humanAssistantUrl,
         supportTeamHtml,
         suggestionsEnabled,
+        bubblePosition: bubbleAppearance.position,
+        bubbleBottomPx: bubbleAppearance.bottomPx,
+        bubbleLeftPx: bubbleAppearance.leftPx,
+        bubbleRightPx: bubbleAppearance.rightPx,
         welcomeProductsJson,
       },
     });
@@ -245,6 +306,10 @@ export async function saveChatSettings(shop, settings) {
       "humanAssistantUrl",
       "supportTeamHtml",
       "suggestionsEnabled",
+      "bubblePosition",
+      "bubbleBottomPx",
+      "bubbleLeftPx",
+      "bubbleRightPx",
       "welcomeProductsJson",
       "createdAt",
       "updatedAt"
@@ -259,6 +324,10 @@ export async function saveChatSettings(shop, settings) {
       ${humanAssistantUrl},
       ${supportTeamHtml},
       ${suggestionsEnabled},
+      ${bubbleAppearance.position},
+      ${bubbleAppearance.bottomPx},
+      ${bubbleAppearance.leftPx},
+      ${bubbleAppearance.rightPx},
       ${welcomeProductsJson},
       CURRENT_TIMESTAMP,
       CURRENT_TIMESTAMP
@@ -271,6 +340,10 @@ export async function saveChatSettings(shop, settings) {
       "humanAssistantUrl" = excluded."humanAssistantUrl",
       "supportTeamHtml" = excluded."supportTeamHtml",
       "suggestionsEnabled" = excluded."suggestionsEnabled",
+      "bubblePosition" = excluded."bubblePosition",
+      "bubbleBottomPx" = excluded."bubbleBottomPx",
+      "bubbleLeftPx" = excluded."bubbleLeftPx",
+      "bubbleRightPx" = excluded."bubbleRightPx",
       "welcomeProductsJson" = excluded."welcomeProductsJson",
       "updatedAt" = CURRENT_TIMESTAMP
   `;

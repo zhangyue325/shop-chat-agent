@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "ChatSettings" ADD COLUMN "bubblePosition" TEXT NOT NULL DEFAULT 'right';
+ALTER TABLE "ChatSettings" ADD COLUMN "bubbleBottomPx" INTEGER NOT NULL DEFAULT 20;
+ALTER TABLE "ChatSettings" ADD COLUMN "bubbleLeftPx" INTEGER NOT NULL DEFAULT 20;
+ALTER TABLE "ChatSettings" ADD COLUMN "bubbleRightPx" INTEGER NOT NULL DEFAULT 20;

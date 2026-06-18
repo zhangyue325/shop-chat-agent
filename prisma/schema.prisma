@@ -93,6 +93,10 @@ model ChatSettings {
   suggestionsEnabled  Boolean   @default(true)
   suggestionChipsJson String    @default("[]")
   suggestionRulesJson String    @default("[]")
+  bubblePosition      String    @default("right")
+  bubbleBottomPx      Int       @default(20)
+  bubbleLeftPx        Int       @default(20)
+  bubbleRightPx       Int       @default(20)
   welcomeProductsJson String
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt

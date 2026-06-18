@@ -29,7 +29,6 @@
         this.elements = {
           container: container,
           chatBubble: container.querySelector('.shop-ai-chat-bubble'),
-          headerLauncher: null,
           chatWindow: container.querySelector('.shop-ai-chat-window'),
           closeButton: container.querySelector('.shop-ai-chat-close'),
           tabButtons: container.querySelectorAll('.shop-ai-chat-tab'),
@@ -42,6 +41,7 @@
 
         // Detect mobile device
         this.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        this.applyBubbleAppearance();
 
         // Set up event listeners
         this.setupEventListeners();
@@ -51,8 +51,6 @@
         if (this.isMobile) {
           this.setupMobileViewport();
         }
-
-        this.setupLauncherPlacement();
       },
 
       /**
@@ -109,60 +107,36 @@
       },
 
       /**
-       * Switch between floating bubble and header launcher based on theme settings.
+       * Apply merchant-configured chat bubble placement.
        */
-      setupLauncherPlacement: function() {
-        const placement = window.shopChatConfig?.launcherPlacement ||
-          this.elements.container.dataset.launcherPlacement ||
-          'bubble';
+      applyBubbleAppearance: function() {
+        const { container } = this.elements;
+        if (!container) return;
 
-        if (placement !== 'header') return;
+        const config = window.shopChatConfig || {};
+        const position = config.bubblePosition === 'left' ? 'left' : 'right';
+        const bottomPx = this.normalizePixelOffset(config.bubbleBottomPx, 20);
+        const leftPx = this.normalizePixelOffset(config.bubbleLeftPx, 20);
+        const rightPx = this.normalizePixelOffset(config.bubbleRightPx, 20);
 
-        const searchAction = document.querySelector(
-          '.header__icon--search, .header__search, details-modal.header__search, modal-opener.header__search, a[href="/search"], button[aria-label*="Search"], a[aria-label*="Search"]'
-        );
-
-        if (!searchAction || !searchAction.parentElement) return;
-
-        const headerLauncher = this.createHeaderLauncher();
-        const searchListItem = searchAction.closest('li');
-        const isCompactHeader = window.matchMedia('(max-width: 749px)').matches;
-
-        if (isCompactHeader && searchListItem) {
-          searchListItem.classList.add('shop-ai-search-with-launcher');
-          searchAction.insertAdjacentElement('beforebegin', headerLauncher);
-        } else if (searchListItem) {
-          const headerLauncherItem = document.createElement('li');
-          headerLauncherItem.className = 'shop-ai-header-link';
-          headerLauncherItem.appendChild(headerLauncher);
-          searchListItem.insertAdjacentElement('beforebegin', headerLauncherItem);
-        } else {
-          searchAction.insertAdjacentElement('beforebegin', headerLauncher);
-        }
-
-        headerLauncher.addEventListener('click', () => this.toggleChatWindow());
-
-        this.elements.headerLauncher = headerLauncher;
-        this.elements.container.classList.add('shop-ai-chat-container--header');
+        container.classList.toggle('position-left', position === 'left');
+        container.classList.toggle('position-right', position !== 'left');
+        container.style.setProperty('--chat-bubble-bottom', `${bottomPx}px`);
+        container.style.setProperty('--chat-bubble-left', `${leftPx}px`);
+        container.style.setProperty('--chat-bubble-right', `${rightPx}px`);
       },
 
       /**
-       * Create a header icon that inherits the theme header color.
-       * @returns {HTMLButtonElement} Header launcher button
+       * Normalize pixel offsets loaded from merchant settings.
        */
-      createHeaderLauncher: function() {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'shop-ai-header-launcher';
-        button.setAttribute('aria-label', 'Open AI chat');
-        button.innerHTML = [
-          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">',
-          '<path d="M9.9 4.24 11.2 7.8l3.56 1.3-3.56 1.3-1.3 3.56-1.3-3.56-3.56-1.3 3.56-1.3 1.3-3.56z"></path>',
-          '<path d="M17.5 12.5 18.28 14.72 20.5 15.5l-2.22.78-.78 2.22-.78-2.22-2.22-.78 2.22-.78.78-2.22z"></path>',
-          '<path d="M5.5 14.5 6.05 16 7.5 16.5 6.05 17 5.5 18.5 4.95 17 3.5 16.5 4.95 16 5.5 14.5z"></path>',
-          '</svg>'
-        ].join('');
-        return button;
+      normalizePixelOffset: function(value, fallback) {
+        const number = Number.parseInt(value, 10);
+
+        if (!Number.isFinite(number)) {
+          return fallback;
+        }
+
+        return Math.max(0, Math.min(number, 1000));
       },
 
       /**
@@ -729,6 +703,16 @@
             suggestionsEnabled: typeof settings.suggestionsEnabled === 'boolean'
               ? settings.suggestionsEnabled
               : config.suggestionsEnabled,
+            bubblePosition: settings.bubblePosition || config.bubblePosition,
+            bubbleBottomPx: Number.isFinite(Number(settings.bubbleBottomPx))
+              ? settings.bubbleBottomPx
+              : config.bubbleBottomPx,
+            bubbleLeftPx: Number.isFinite(Number(settings.bubbleLeftPx))
+              ? settings.bubbleLeftPx
+              : config.bubbleLeftPx,
+            bubbleRightPx: Number.isFinite(Number(settings.bubbleRightPx))
+              ? settings.bubbleRightPx
+              : config.bubbleRightPx,
             welcomeProducts: Array.isArray(settings.welcomeProducts) && settings.welcomeProducts.length > 0
               ? settings.welcomeProducts
               : config.welcomeProducts || ShopAIChat.Product.welcomeProducts

@@ -26,6 +26,10 @@ export const action = async ({ request }) => {
     humanAssistantUrl: settings.humanAssistantUrl,
     supportTeamHtml,
     suggestionsEnabled: settings.suggestionsEnabled,
+    bubblePosition: settings.bubblePosition,
+    bubbleBottomPx: settings.bubbleBottomPx,
+    bubbleLeftPx: settings.bubbleLeftPx,
+    bubbleRightPx: settings.bubbleRightPx,
     welcomeProducts: settings.welcomeProducts,
   });
 
