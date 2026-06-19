@@ -246,9 +246,6 @@ async function handleChatSession({
           ).catch((error) => {
             console.error("Error saving message to database:", error);
           });
-
-          // Send a completion message
-          stream.sendMessage({ type: "message_complete" });
         },
 
         // Handle tool use requests
@@ -320,6 +317,9 @@ async function handleChatSession({
       },
     );
   }
+
+  // Signal end of assistant turn
+  stream.sendMessage({ type: "message_complete" });
 
   // Send product results if available
   if (productState.selected.length > 0) {
