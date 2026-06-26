@@ -40,12 +40,12 @@ export const action = async ({ request }) => {
 export default function SupportTeam() {
   const { settings } = useLoaderData();
   const actionData = useActionData();
-  const navigation = useNavigation();
+  const navigation = useNavigation();w
   const isSaving = navigation.state === "submitting";
 
   return (
     <s-page>
-      <ui-title-bar title="Shop Chat Agent" />
+      <ui-title-bar title="AI Shopping Assistant" />
 
       <s-section>
         <div className="settings-shell">

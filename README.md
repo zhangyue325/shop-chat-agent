@@ -1,6 +1,6 @@
-# Shop Chat Agent
+# AI Shopping Assistant
 
-Shop Chat Agent is a Shopify AI assistant app built with React Router, Shopify Storefront MCP, Claude, and a storefront chat bubble extension.
+AI Shopping Assistant is a Shopify AI assistant app built with React Router, Shopify Storefront MCP, Claude, and a storefront chat bubble extension.
 
 The project started from Shopify's Storefront MCP assistant example, but extends it with a more usable merchant admin, welcome products, configurable prompts, support content, greeting chips, suggested replies, and storefront chat UI controls.
 

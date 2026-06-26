@@ -51,7 +51,7 @@ export default function Appearance() {
 
   return (
     <s-page>
-      <ui-title-bar title="Shop Chat Agent" />
+      <ui-title-bar title="AI Shopping Assistant" />
 
       <s-section>
         <div className="settings-shell">

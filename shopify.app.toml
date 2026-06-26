@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "7b0d858bcd2fb2e2a943668cb2e2624c"
-name = "shop-chat-agent"
+name = "AI Shopping Assistant"
 application_url = "https://shop-chat-agent-976732686346.asia-southeast1.run.app/"
 embedded = true
 handle = "storefront-ai-chat-agent"
