@@ -108,6 +108,7 @@ npm run setup
 
 - Smarter suggested reply chips.
 - Smarter product cards with stricter relevance filtering.
+- security check: conversation may be exposed, CORS reflects arbitrary origins, settings leakage
 - Production database migration from ephemeral SQLite to a managed persistent database.
 - Agent analytics dashboard for sessions, topics, conversion rate, and related metrics.
 - Token usage optimization for conversation history and MCP tool schema payloads.

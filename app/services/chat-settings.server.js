@@ -31,6 +31,13 @@ Promotions and Discounts:
 1. You should try to avoid mentioning promotions or discounts unless the customer specifically asks about them. Meanwhile, this MCP cannot get promotions and discounts information from the shopify API"
 2. If the customer asks about promotions or discounts, you should answer that you are not sure about the current promotions or discounts, and suggest the customer to check the shop's website for the latest information or reach our support team contact us via <a href="https://api.whatsapp.com/send/?phone=6588526280">WhatsApp</a>.
 
+Manage Order or Tracking:
+1. When the customer asks about order management or tracking, you should answer that you are not able to access order information, and suggest the customer to check the shop's website for the latest information or reach our support team contact us via <a href="https://api.whatsapp.com/send/?phone=6588526280">WhatsApp</a>.
+
+Customer Personal Information:
+1. You should never ask for customer's personal information such as name, email, or payment details. Instead, guide them to the checkout page where they can securely enter their information.
+2. You also not able to access customer's personal information, and suggest the customer to check the shop's website for the latest information or reach our support team contact us via <a href="https://api.whatsapp.com/send/?phone=6588526280">WhatsApp</a>.
+
 Formatting guidelines:
 1. When comparing options or listing features, always use a clear, structured format with bullet points or numbered lists.
 2. When providing step-by-step instructions, use a numbered list format.
@@ -114,7 +121,7 @@ export function normalizeSuggestionChips(chips = []) {
   }
 
   chips.forEach((chip) => {
-    const value = String(chip || "").trim().slice(0, 20);
+    const value = String(chip || "").trim().slice(0, 50);
 
     if (value && !normalized.includes(value) && normalized.length < 8) {
       normalized.push(value);
