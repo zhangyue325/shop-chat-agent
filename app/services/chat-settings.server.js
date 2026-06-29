@@ -50,7 +50,20 @@ MCP:
 
 export const defaultBrandDescription = "PAZZION is a Singapore-born women's footwear and lifestyle brand best known for comfortable, polished shoes made mainly with genuine leather. It was founded in Singapore in 2002 and has built its identity around “quality, comfort, and understated design” for everyday wear";
 export const defaultProductOffering = "PAZZION offers a collection of genuine leather shoes and bags, expertly crafted for the modern individual. Their products, including heels, loafers, flats, and sandals, blend stylish design with everyday comfort. With a focus on quality craftsmanship, PAZZION provides sophisticated footwear and accessories perfect for both work and leisure.";
-export const defaultSupportTeamHtml = '<p>You can contact us via <a href="https://api.whatsapp.com/send/?phone=6588526280">WhatsApp</a> or drop an email to <a href="customercare@pazzion.com">customercare@pazzion.com</a>. We\'ll respond as soon as possible.</p>';
+export const defaultSupportTeamHtml = `
+<p>You can contact us via <a href="https://api.whatsapp.com/send/?phone=6588526280">WhatsApp</a> or drop an email to <a href="customercare@pazzion.com">customercare@pazzion.com</a>. We\'ll respond as soon as possible.</p>
+<br>
+
+<p>For more information, please refer to our following pages:</p>
+<ul>
+  <li><a href="https://www.pazzion.com/policies/terms-of-service">Terms of Service</a></li>
+  <li><a href="https://www.pazzion.com/pages/returns-refunds">Return, Exchanges & Refunds</a></li>
+  <li><a href="https://www.pazzion.com/pages/shipping-delivery">Shipping & Delivery</a></li>
+  <li><a href="https://www.pazzion.com/pages/faq">Frequently Asked Questions</a></li>
+</ul>
+
+
+`;
 export const defaultSuggestionsEnabled = true;
 export const defaultSuggestionChips = [
   "Show best sellers",
@@ -91,7 +104,7 @@ export const defaultWelcomeProducts = [
 ];
 
 export function normalizeWelcomeProducts(products = defaultWelcomeProducts) {
-  return products.slice(0, 5).map((product = {}, index) => ({
+  return products.map((product = {}, index) => ({
     id: product.id || `welcome-product-${index + 1}`,
     title: product.title?.trim() || `Product ${index + 1}`,
     price: product.price?.trim() || "",

@@ -89,7 +89,7 @@ export function createClaudeService(apiKey = process.env.CLAUDE_API_KEY) {
       system: [
         "Generate suggested reply chips for an ecommerce chat assistant based on the AI response.",
         "Return JSON only: an array of exactly 0~8 strings.",
-        "Each string must be very concise customer reply. and must be 25 characters or fewer. If some of your suggestions are longer than 25 characters, just do not include them.",
+        "Each string must be very concise customer reply. and must be 20 characters or fewer. If some of your suggestions are longer than 20 characters, just do not include them.",
         "Your suggestions must comes from the AI response. Do not include any new suggestions that are not relevant to the AI response.",
         "Do not include markdown, explanations, numbering, or extra keys.",
         "You can generate 0~3 suggested replies if possible in normal cases.",
@@ -145,7 +145,7 @@ function normalizeSuggestedReplies(rawText) {
       return parsed
         .map((suggestion) => String(suggestion || "").trim())
         .filter(Boolean)
-        .map((suggestion) => suggestion.slice(0, 40)) // tolorate to 40 characters, although AI should return 25 or fewer
+        .map((suggestion) => suggestion.slice(0, 50)) // tolorate to 50 characters, although AI should return 25 or fewer
         .filter((suggestion, index, suggestions) => suggestions.indexOf(suggestion) === index)
         .slice(0, 8);
     }

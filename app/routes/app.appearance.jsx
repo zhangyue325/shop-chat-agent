@@ -128,7 +128,7 @@ export default function Appearance() {
 
             <div className="actions">
               <button type="submit" disabled={isSaving}>
-                {isSaving ? "Saving..." : "Save appearance"}
+                {isSaving ? "Saving..." : "Save"}
               </button>
               {actionData?.saved && <span>Saved</span>}
             </div>

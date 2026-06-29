@@ -1,12 +1,36 @@
+import { useState } from "react";
 import { Form, useActionData, useLoaderData, useNavigation } from "react-router";
 import { authenticate } from "../shopify.server";
 import {
   defaultWelcomeMessage,
-  defaultWelcomeProducts,
   getChatSettings,
   normalizeWelcomeProducts,
   saveChatSettings,
 } from "../services/chat-settings.server";
+
+function getEditorProduct(product = {}, index) {
+  const id = product.id || `welcome-product-${index + 1}`;
+
+  return {
+    id,
+    title: product.title || "",
+    price: product.price || "",
+    image_url: product.image_url || "",
+    url: product.url || "",
+  };
+}
+
+function getEmptyProduct() {
+  const id = `welcome-product-${Date.now()}`;
+
+  return {
+    id,
+    title: "",
+    price: "",
+    image_url: "",
+    url: "",
+  };
+}
 
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
@@ -21,14 +45,26 @@ export const action = async ({ request }) => {
   const formData = await request.formData();
   const welcomeMessage =
     formData.get("welcomeMessage")?.toString().trim() || defaultWelcomeMessage;
+  const parsedProductCount = Number.parseInt(
+    formData.get("productCount")?.toString() || "",
+    10,
+  );
+  const productCount = Number.isFinite(parsedProductCount)
+    ? Math.max(0, parsedProductCount)
+    : settings.welcomeProducts.length;
 
-  const welcomeProducts = defaultWelcomeProducts.map((product, index) => ({
-    id: product.id,
-    title: formData.get(`productTitle-${index}`)?.toString() || "",
-    price: formData.get(`productPrice-${index}`)?.toString() || "",
-    image_url: formData.get(`productImage-${index}`)?.toString() || "",
-    url: formData.get(`productUrl-${index}`)?.toString() || "",
-  }));
+  const welcomeProducts = Array.from(
+    { length: productCount },
+    (_, index) => ({
+      id:
+        formData.get(`productId-${index}`)?.toString() ||
+        `welcome-product-${index + 1}`,
+      title: formData.get(`productTitle-${index}`)?.toString() || "",
+      price: formData.get(`productPrice-${index}`)?.toString() || "",
+      image_url: formData.get(`productImage-${index}`)?.toString() || "",
+      url: formData.get(`productUrl-${index}`)?.toString() || "",
+    }),
+  );
   const suggestionChips = Array.from({ length: 8 }, (_, index) =>
     formData.get(`suggestionChip-${index}`)?.toString() || "",
   );
@@ -57,7 +93,34 @@ export default function Greetings() {
   const actionData = useActionData();
   const navigation = useNavigation();
   const isSaving = navigation.state === "submitting";
-  const products = settings.welcomeProducts;
+  const [products, setProducts] = useState(() =>
+    settings.welcomeProducts.map((product, index) =>
+      getEditorProduct(product, index),
+    ),
+  );
+
+  function addProduct() {
+    setProducts((currentProducts) => [...currentProducts, getEmptyProduct()]);
+  }
+
+  function deleteProduct(productId) {
+    setProducts((currentProducts) =>
+      currentProducts.filter((product) => product.id !== productId),
+    );
+  }
+
+  function updateProduct(productId, field, value) {
+    setProducts((currentProducts) =>
+      currentProducts.map((product) =>
+        product.id === productId
+          ? {
+              ...product,
+              [field]: value,
+            }
+          : product,
+      ),
+    );
+  }
 
   return (
     <s-page>
@@ -71,6 +134,13 @@ export default function Greetings() {
           </div>
 
           <Form method="post" className="panel">
+            <input
+              type="hidden"
+              name="productCount"
+              value={products.length}
+              readOnly
+            />
+
             <div className="field">
               <label htmlFor="welcomeMessage">Greeting</label>
               <textarea
@@ -104,14 +174,34 @@ export default function Greetings() {
                 <div className="product-form" key={product.id}>
                   <div className="product-form-header">
                     <span>Product {index + 1}</span>
+                    <button
+                      type="button"
+                      className="delete-product"
+                      onClick={() => deleteProduct(product.id)}
+                    >
+                      Delete
+                    </button>
                   </div>
+                  <input
+                    type="hidden"
+                    name={`productId-${index}`}
+                    value={product.id}
+                    readOnly
+                  />
                   <div className="field-grid">
                     <div className="field">
                       <label htmlFor={`productTitle-${index}`}>Title</label>
                       <input
                         id={`productTitle-${index}`}
                         name={`productTitle-${index}`}
-                        defaultValue={product.title}
+                        value={product.title}
+                        onChange={(event) =>
+                          updateProduct(
+                            product.id,
+                            "title",
+                            event.target.value,
+                          )
+                        }
                       />
                     </div>
                     <div className="field">
@@ -119,7 +209,14 @@ export default function Greetings() {
                       <input
                         id={`productPrice-${index}`}
                         name={`productPrice-${index}`}
-                        defaultValue={product.price}
+                        value={product.price}
+                        onChange={(event) =>
+                          updateProduct(
+                            product.id,
+                            "price",
+                            event.target.value,
+                          )
+                        }
                       />
                     </div>
                     <div className="field">
@@ -127,7 +224,14 @@ export default function Greetings() {
                       <input
                         id={`productImage-${index}`}
                         name={`productImage-${index}`}
-                        defaultValue={product.image_url}
+                        value={product.image_url}
+                        onChange={(event) =>
+                          updateProduct(
+                            product.id,
+                            "image_url",
+                            event.target.value,
+                          )
+                        }
                       />
                     </div>
                     <div className="field">
@@ -135,12 +239,24 @@ export default function Greetings() {
                       <input
                         id={`productUrl-${index}`}
                         name={`productUrl-${index}`}
-                        defaultValue={product.url}
+                        value={product.url}
+                        onChange={(event) =>
+                          updateProduct(
+                            product.id,
+                            "url",
+                            event.target.value,
+                          )
+                        }
                       />
                     </div>
                   </div>
                 </div>
               ))}
+              <div className="product-editor-actions">
+                <button type="button" onClick={addProduct}>
+                  Add product
+                </button>
+              </div>
             </div>
 
             <div className="actions">
@@ -249,6 +365,38 @@ const sharedStyles = `
     border: 1px solid #e3e3e3;
     border-radius: 8px;
     background: #fafafa;
+  }
+
+  .product-form-header,
+  .product-editor-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .product-form-header {
+    justify-content: space-between;
+  }
+
+  .delete-product,
+  .product-editor-actions button {
+    border: 1px solid #c9c9c9;
+    border-radius: 6px;
+    background: #fff;
+    color: #202223;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 650;
+    cursor: pointer;
+  }
+
+  .delete-product {
+    padding: 5px 8px;
+    color: #8a1f11;
+  }
+
+  .product-editor-actions button {
+    padding: 8px 12px;
   }
 
   .field-grid {

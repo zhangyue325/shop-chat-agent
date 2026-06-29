@@ -40,7 +40,7 @@ export const action = async ({ request }) => {
 export default function SupportTeam() {
   const { settings } = useLoaderData();
   const actionData = useActionData();
-  const navigation = useNavigation();w
+  const navigation = useNavigation();
   const isSaving = navigation.state === "submitting";
 
   return (

@@ -462,7 +462,7 @@
         const normalized = [];
 
         suggestions.forEach(suggestion => {
-          const value = String(suggestion || '').trim().slice(0, 20);
+          const value = String(suggestion || '').trim().slice(0, 50);
 
           if (value && !normalized.includes(value) && normalized.length < 8) {
             normalized.push(value);

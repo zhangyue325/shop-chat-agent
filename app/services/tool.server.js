@@ -6,7 +6,7 @@ import { saveMessage } from "../db.server";
 import AppConfig from "./config.server";
 
 const MAX_CATALOG_PRODUCTS_IN_HISTORY = 10;
-const MAX_CATALOG_DESCRIPTION_LENGTH = 220;
+const MAX_CATALOG_DESCRIPTION_LENGTH = 150;
 
 /**
  * Creates a tool service instance

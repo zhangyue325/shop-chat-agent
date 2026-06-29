@@ -100,7 +100,7 @@ export default function System() {
 
             <div className="actions">
               <button type="submit" disabled={isSaving}>
-                {isSaving ? "Saving..." : "Save system"}
+                {isSaving ? "Saving..." : "Save"}
               </button>
               {actionData?.saved && <span>Saved</span>}
             </div>

@@ -15,10 +15,10 @@ import { createClaudeService } from "../services/claude.server";
 import { createToolService } from "../services/tool.server";
 import { getChatSettings } from "../services/chat-settings.server";
 
-const MAX_CLAUDE_HISTORY_MESSAGES = 20;
+const MAX_CLAUDE_HISTORY_MESSAGES = 15;
 
 /**
- * Rract Router loader function for handling GET requests
+ * React Router loader function for handling GET requests
  */
 export async function loader({ request }) {
   // Handle OPTIONS requests (CORS preflight)
