@@ -1,5 +1,5 @@
 {
-  "name": "shop-chat-agent",
+  "name": "AI Shopping Assistant",
   "private": true,
   "scripts": {
     "build": "react-router build",
@@ -21,7 +21,7 @@
   },
   "type": "module",
   "engines": {
-    "node": ">=20.10"
+    "node": ">=22"
   },
   "dependencies": {
     "@prisma/client": "^6.2.1",
@@ -78,5 +78,5 @@
     "@graphql-codegen/typescript-operations": "4.5.0",
     "minimatch": "9.0.5"
   },
-  "author": "siddhantbajaj"
+  "author": "zy"
 }

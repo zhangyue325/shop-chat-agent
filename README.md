@@ -33,58 +33,7 @@ Some feature ideas are inspired by [Clarity Brand Agent](https://clarity.microso
 ## Demo
 
 Demo store: [shop-chat-agent-dev-store.myshopify.com](https://shop-chat-agent-dev-store.myshopify.com/)
-
 Store password: `123`
-
-## Local Development
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/zhangyue325/shop-chat-agent.git
-cd shop-chat-agent
-```
-
-### 2. Install dependencies
-
-```bash
-npm install
-```
-
-### 3. Configure environment variables
-
-Create a `.env` file from `.env.example` and set your Claude API key:
-
-```bash
-CLAUDE_API_KEY=your_claude_api_key
-```
-
-### 4. Start Shopify app development
-
-Install or update Shopify CLI if needed:
-
-```bash
-npm install -g @shopify/cli@latest
-```
-
-Start the app:
-
-```bash
-shopify app dev --use-localhost --reset
-```
-
-Shopify Storefront MCP documentation: [shopify.dev/docs/apps/build/storefront-mcp](https://shopify.dev/docs/apps/build/storefront-mcp)
-
-## Useful Scripts
-
-```bash
-npm run dev          # Start Shopify app development
-npm run build        # Build the React Router app
-npm run start        # Serve the built app
-npm run typecheck    # Generate route types and run TypeScript checks
-npm run lint         # Run ESLint
-npm run setup        # Generate Prisma client and deploy migrations
-```
 
 ## Database
 
@@ -106,10 +55,12 @@ npm run setup
 
 ## Roadmap
 
-- Smarter suggested reply chips.
-- Smarter product cards with stricter relevance filtering.
+- ~~Smarter suggested reply chips based on AI instead of keyword~~
+- ~~Smarter product cards with stricter relevance filtering~~
+- ~~token usage optimization: use claude cache~~
+- token usage optimization: normalize the response from MCP and make it shorter
 - security check: conversation may be exposed, CORS reflects arbitrary origins, settings leakage
 - Production database migration from ephemeral SQLite to a managed persistent database.
 - Agent analytics dashboard for sessions, topics, conversion rate, and related metrics.
-- Token usage optimization for conversation history and MCP tool schema payloads.
+- migrate mcp to ucp by end of August
 

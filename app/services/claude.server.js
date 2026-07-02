@@ -33,12 +33,13 @@ export function createClaudeService(apiKey = process.env.CLAUDE_API_KEY) {
     tools
   }, streamHandlers) => {
     const systemInstruction = getSystemPrompt(systemPrompt);
+    const cachedSystemInstruction = createCachedSystemInstruction(systemInstruction);
 
     // Create stream
     const stream = await anthropic.messages.stream({
       model: AppConfig.api.defaultModel,
       max_tokens: AppConfig.api.maxTokens,
-      system: systemInstruction,
+      system: cachedSystemInstruction,
       messages,
       tools: tools && tools.length > 0 ? tools : undefined
     });
@@ -58,6 +59,7 @@ export function createClaudeService(apiKey = process.env.CLAUDE_API_KEY) {
 
     // Wait for final message
     const finalMessage = await stream.finalMessage();
+    logClaudeUsage(finalMessage.usage);
 
     // Process tool use requests
     if (streamHandlers.onToolUse && finalMessage.content) {
@@ -133,6 +135,45 @@ export function createClaudeService(apiKey = process.env.CLAUDE_API_KEY) {
     generateSuggestedReplies,
     getSystemPrompt
   };
+}
+
+function createCachedSystemInstruction(systemInstruction) {
+  return [
+    {
+      type: "text",
+      text: systemInstruction,
+      cache_control: { type: "ephemeral" }
+    }
+  ];
+}
+
+function logClaudeUsage(usage) {
+  if (!usage) {
+    return;
+  }
+
+  const {
+    input_tokens,
+    output_tokens,
+    cache_creation_input_tokens,
+    cache_read_input_tokens
+  } = usage;
+
+  if (
+    input_tokens === undefined &&
+    output_tokens === undefined &&
+    cache_creation_input_tokens === undefined &&
+    cache_read_input_tokens === undefined
+  ) {
+    return;
+  }
+
+  console.log("Claude usage:", {
+    input_tokens,
+    output_tokens,
+    cache_creation_input_tokens,
+    cache_read_input_tokens
+  });
 }
 
 function normalizeSuggestedReplies(rawText) {
